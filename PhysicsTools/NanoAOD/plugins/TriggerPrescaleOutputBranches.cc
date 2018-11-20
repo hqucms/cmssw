@@ -37,9 +37,10 @@ TriggerPrescaleOutputBranches::updateTriggerNames(TTree & tree, const edm::Trigg
        if(name.compare(0,3,"HLT")==0 || name.compare(0,2,"L1")==0 ){
            for(auto & existing : m_triggerPrescaleBranches) {if(name==existing.name) found=true;}
            if(!found){
-                NamedBranchPtr nb(name,"Trigger prescale"); //FIXME: If the title can be updated we can use it to list the versions _v* that were seen in this file
+                std::string branchName = "Prescale_"+name;
+                NamedBranchPtr nb(branchName,"Trigger prescale"); //FIXME: If the title can be updated we can use it to list the versions _v* that were seen in this file
                 uint16_t backFillValue=0;
-                nb.branch= tree.Branch(("Prescale_"+nb.name).c_str(), &backFillValue, (name + "/s").c_str());
+                nb.branch= tree.Branch(branchName.c_str(), &backFillValue, (branchName + "/s").c_str());
                 nb.branch->SetTitle(nb.title.c_str());
                 nb.idx=j;
                 m_triggerPrescaleBranches.push_back(nb);
