@@ -73,6 +73,7 @@ private:
 };
 
 const std::vector<std::string> DeepBoostedJetTagInfoProducer::particle_features_ {
+  "pfcand_mask",
   "pfcand_puppiw",
   "pfcand_hcalFrac",
   "pfcand_VTX_ass",
@@ -92,6 +93,7 @@ const std::vector<std::string> DeepBoostedJetTagInfoProducer::particle_features_
   "pfcand_erel_log",
   "pfcand_pt_log",
   "pfcand_drminsv",
+  "pfcand_drminsvin",
   "pfcand_drsubjet1",
   "pfcand_drsubjet2",
   "pfcand_normchi2",
@@ -118,6 +120,7 @@ const std::vector<std::string> DeepBoostedJetTagInfoProducer::particle_features_
 };
 
 const std::vector<std::string> DeepBoostedJetTagInfoProducer::sv_features_ {
+  "sv_mask",
   "sv_phirel",
   "sv_etarel",
   "sv_deltaR",
@@ -364,6 +367,7 @@ void DeepBoostedJetTagInfoProducer::fillParticleFeatures(DeepBoostedJetFeatures 
     }
 
     // basic kinematics
+    fts.fill("pfcand_mask", 1);
     fts.fill("pfcand_puppiw", puppi_wgt_cache.at(cand.key()));
     fts.fill("pfcand_phirel", reco::deltaPhi(puppiP4, jet));
     fts.fill("pfcand_etarel", etasign * (puppiP4.eta() - jet.eta()));
@@ -375,11 +379,15 @@ void DeepBoostedJetTagInfoProducer::fillParticleFeatures(DeepBoostedJetFeatures 
     fts.fill("pfcand_pt_log", catch_infs(std::log(puppiP4.pt()), -99));
 
     double minDR = 999;
+    double minDRin = 2.*jet_radius_;
     for (const auto &sv : *svs_){
       double dr = reco::deltaR(*cand, sv);
       if (dr < minDR) minDR = dr;
+      if (dr < minDRin && reco::deltaR2(jet, sv) < jet_radius_*jet_radius_) minDRin = dr;
     }
     fts.fill("pfcand_drminsv", minDR==999 ? -1 : minDR);
+    fts.fill("pfcand_drminsvin", minDRin);
+
 
     // subjets
     auto subjets = patJet->subjets();
@@ -461,6 +469,7 @@ void DeepBoostedJetTagInfoProducer::fillSVFeatures(DeepBoostedJetFeatures &fts, 
 
   for (const auto *sv : jetSVs){
     // basic kinematics
+    fts.fill("sv_mask", 1);
     fts.fill("sv_phirel", reco::deltaPhi(*sv, jet));
     fts.fill("sv_etarel", etasign * (sv->eta() - jet.eta()));
     fts.fill("sv_deltaR", reco::deltaR(*sv, jet));
