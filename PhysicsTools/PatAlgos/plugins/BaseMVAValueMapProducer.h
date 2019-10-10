@@ -47,6 +47,8 @@
 #include "DataFormats/PatCandidates/interface/Electron.h"
 #include "PhysicsTools/TensorFlow/interface/TensorFlow.h"
 
+#include "PhysicsTools/ONNXRuntime/interface/ONNXRuntime.h"
+
 #include <string>
 //
 // class declaration
@@ -63,7 +65,8 @@ public:
         weightfilename_(iConfig.getParameter<edm::FileInPath>("weightFile").fullPath()),
         isClassifier_(iConfig.getParameter<bool>("isClassifier")),
         tmva_(backend_ == "TMVA"),
-        tf_(backend_ == "TF") {
+        tf_(backend_ == "TF"),
+        onnx_(backend_ == "ONNX") {
     if (tmva_)
       reader_ = new TMVA::Reader();
     edm::ParameterSet const& varsPSet = iConfig.getParameter<edm::ParameterSet>("variables");
@@ -97,9 +100,16 @@ public:
       tensorflow::SessionOptions sessionOptions;
       tensorflow::setThreading(sessionOptions, nThreads, singleThreadPool);
       session_ = tensorflow::createSession(graph_, sessionOptions);
-
+    } else if (onnx_) {
+      ort_ = std::make_unique<Ort::ONNXRuntime>(weightfilename_);
+      inputTensorName_ = iConfig.getParameter<std::string>("inputTensorName");
+      outputTensorName_ = iConfig.getParameter<std::string>("outputTensorName");
+      output_names_ = iConfig.getParameter<std::vector<std::string>>("outputNames");
+      for (const auto& s : iConfig.getParameter<std::vector<std::string>>("outputFormulas")) {
+        output_formulas_.push_back(StringObjectFunction<std::vector<float>>(s));
+      }
     } else {
-      throw cms::Exception("ConfigError") << "Only 'TF' and 'TMVA' backends are supported\n";
+      throw cms::Exception("ConfigError") << "Only 'TF', 'TMVA' and 'ONNX' backends are supported\n";
     }
     if (tmva_)
       produces<edm::ValueMap<float>>();
@@ -136,6 +146,7 @@ private:
   TMVA::Reader* reader_;
   tensorflow::GraphDef* graph_;
   tensorflow::Session* session_;
+  std::unique_ptr<Ort::ONNXRuntime> ort_;
 
   std::string name_;
   std::string backend_;
@@ -143,6 +154,7 @@ private:
   bool isClassifier_;
   bool tmva_;
   bool tf_;
+  bool onnx_;
   std::string inputTensorName_;
   std::string outputTensorName_;
   std::vector<std::string> output_names_;
@@ -165,8 +177,7 @@ void BaseMVAValueMapProducer<T>::produce(edm::Event& iEvent, const edm::EventSet
     fillAdditionalVariables(o);
     if (tmva_) {
       mvaOut[0].push_back(isClassifier_ ? reader_->EvaluateMVA(name_) : reader_->EvaluateRegression(name_)[0]);
-    }
-    if (tf_) {
+    } else if (tf_) {
       //currently support only one input sensor to reuse the TMVA like config
       tensorflow::TensorShape input_size{1, (long long int)positions_.size()};
       tensorflow::NamedTensorList input_tensors;
@@ -185,6 +196,12 @@ void BaseMVAValueMapProducer<T>::produce(edm::Event& iEvent, const edm::EventSet
         tmpOut.push_back(outputs.at(0).matrix<float>()(0, k));
       for (size_t k = 0; k < output_names_.size(); k++)
         mvaOut[k].push_back(output_formulas_[k](tmpOut));
+    } else if (onnx_) {
+      Ort::FloatArrays input_values({values_});
+      auto outputs = ort_->run({inputTensorName_}, input_values, {outputTensorName_})[0];
+      for (size_t k = 0; k < output_names_.size(); k++){
+        mvaOut[k].push_back(output_formulas_[k](outputs));
+      }
     }
   }
   size_t k = 0;
@@ -209,7 +226,7 @@ edm::ParameterSetDescription BaseMVAValueMapProducer<T>::getDescription() {
   variables.setAllowAnything();
   desc.add<edm::ParameterSetDescription>("variables", variables)->setComment("list of input variable definitions");
   desc.add<edm::FileInPath>("weightFile")->setComment("xml weight file");
-  desc.add<std::string>("backend", "TMVA")->setComment("TMVA or TF");
+  desc.add<std::string>("backend", "TMVA")->setComment("TMVA, TF or ONNX");
   desc.add<std::string>("inputTensorName", "")->setComment("Name of tensorflow input tensor in the model");
   desc.add<std::string>("outputTensorName", "")->setComment("Name of tensorflow output tensor in the model");
   desc.add<std::vector<std::string>>("outputNames", std::vector<std::string>())

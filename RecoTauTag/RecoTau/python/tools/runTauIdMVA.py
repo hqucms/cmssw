@@ -689,9 +689,9 @@ class TauIDEmbedder(object):
             }
 
             file_names = [
-                'core:RecoTauTag/TrainingFiles/data/DeepTauId/deepTau_2017v2p6_e6_core.pb',
-                'inner:RecoTauTag/TrainingFiles/data/DeepTauId/deepTau_2017v2p6_e6_inner.pb',
-                'outer:RecoTauTag/TrainingFiles/data/DeepTauId/deepTau_2017v2p6_e6_outer.pb',
+                'core:RecoTauTag/TrainingFiles/data/DeepTauId/deepTau_2017v2p6_e6_core.onnx',
+                'inner:RecoTauTag/TrainingFiles/data/DeepTauId/deepTau_2017v2p6_e6_inner.onnx',
+                'outer:RecoTauTag/TrainingFiles/data/DeepTauId/deepTau_2017v2p6_e6_outer.onnx',
             ]
             self.process.deepTau2017v2 = self.cms.EDProducer("DeepTauId",
                 electrons              = self.cms.InputTag('slimmedElectrons'),
@@ -745,9 +745,9 @@ class TauIDEmbedder(object):
             }
 
             file_names = [
-                'core:RecoTauTag/TrainingFiles/data/DeepTauId/deepTau_2017v2p6_e6_core.pb',
-                'inner:RecoTauTag/TrainingFiles/data/DeepTauId/deepTau_2017v2p6_e6_inner.pb',
-                'outer:RecoTauTag/TrainingFiles/data/DeepTauId/deepTau_2017v2p6_e6_outer.pb',
+                'core:RecoTauTag/TrainingFiles/data/DeepTauId/DeepTau2017v2p6_step1_e6_core.onnx',
+                'inner:RecoTauTag/TrainingFiles/data/DeepTauId/DeepTau2017v2p6_step1_e6_inner.onnx',
+                'outer:RecoTauTag/TrainingFiles/data/DeepTauId/DeepTau2017v2p6_step1_e6_outer.onnx',
             ]
             self.process.deepTau2017v2p1 = self.cms.EDProducer("DeepTauId",
                 electrons                = self.cms.InputTag('slimmedElectrons'),

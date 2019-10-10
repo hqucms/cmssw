@@ -35,5 +35,6 @@
   <use   name="MagneticField/Records"/>
   <use   name="CommonTools/BaseParticlePropagator"/>
   <use   name="PhysicsTools/TensorFlow"/>
+  <use   name="PhysicsTools/ONNXRuntime"/>
   <use   name="root"/>
 </library>

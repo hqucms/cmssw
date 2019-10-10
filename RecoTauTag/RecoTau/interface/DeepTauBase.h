@@ -15,6 +15,7 @@
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
 #include "PhysicsTools/TensorFlow/interface/TensorFlow.h"
 #include "tensorflow/core/util/memmapped_file_system.h"
+#include "PhysicsTools/ONNXRuntime/interface/ONNXRuntime.h"
 #include "DataFormats/PatCandidates/interface/Electron.h"
 #include "DataFormats/PatCandidates/interface/Muon.h"
 #include "DataFormats/PatCandidates/interface/Tau.h"
@@ -41,18 +42,21 @@ namespace deep_tau {
   public:
     using GraphPtr = std::shared_ptr<tensorflow::GraphDef>;
 
-    DeepTauCache(const std::map<std::string, std::string>& graph_names, bool mem_mapped);
+    DeepTauCache(const std::map<std::string, std::string>& graph_names, bool use_onnx, bool tf_mem_mapped);
     ~DeepTauCache();
 
     // A Session allows concurrent calls to Run(), though a Session must
     // be created / extended by a single thread.
     tensorflow::Session& getSession(const std::string& name = "") const { return *sessions_.at(name); }
     const tensorflow::GraphDef& getGraph(const std::string& name = "") const { return *graphs_.at(name); }
+    Ort::ONNXRuntime& getONNXRuntime(const std::string& name = "") const { return *onnx_runtimes_.at(name); }
+    const bool use_onnx;
 
   private:
     std::map<std::string, GraphPtr> graphs_;
     std::map<std::string, tensorflow::Session*> sessions_;
     std::map<std::string, std::unique_ptr<tensorflow::MemmappedEnv>> memmappedEnv_;
+    std::map<std::string, std::unique_ptr<Ort::ONNXRuntime>> onnx_runtimes_;
   };
 
   class DeepTauBase : public edm::stream::EDProducer<edm::GlobalCache<DeepTauCache>> {
