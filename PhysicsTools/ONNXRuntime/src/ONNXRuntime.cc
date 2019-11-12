@@ -5,7 +5,7 @@
  *      Author: hqu
  */
 
-#include "../interface/ONNXRuntime.h"
+#include "PhysicsTools/ONNXRuntime/interface/ONNXRuntime.h"
 
 #include <cassert>
 #include <iostream>
@@ -14,10 +14,9 @@
 #include <functional>
 #include "FWCore/Utilities/interface/Exception.h"
 
-namespace Ort {
+namespace cms {
 
-  // global variable `g_api` needs to be defined here to access the ONNXRuntime API
-  const OrtApi* g_api = OrtGetApi(ORT_API_VERSION);
+namespace Ort {
 
   ONNXRuntime::ONNXRuntime(const std::string& model_path, const SessionOptions* session_options) {
     // create session
@@ -25,10 +24,7 @@ namespace Ort {
       session_.reset(new Session(getEnv(), model_path.c_str(), *session_options));
     } else {
       SessionOptions sess_opts;
-      sess_opts.EnableSequentialExecution();
       sess_opts.SetIntraOpNumThreads(1);
-      sess_opts.SetInterOpNumThreads(1);
-      sess_opts.SetGraphOptimizationLevel(GraphOptimizationLevel::ORT_ENABLE_BASIC);
       session_.reset(new Session(getEnv(), model_path.c_str(), sess_opts));
     }
     AllocatorWithDefaultOptions allocator;
@@ -165,8 +161,10 @@ namespace Ort {
   Env& ONNXRuntime::getEnv() {
     // `env` cannot be const as the constructor of Ort::Session takes Env&.
     // But the implementation of Env is thread-safe so it's fine.
-    static Env env(ORT_LOGGING_LEVEL_WARNING, "onnxruntime");
+    CMS_THREAD_SAFE static Env env(ORT_LOGGING_LEVEL_WARNING, "onnxruntime");
     return env;
   }
 
 } /* namespace Ort */
+
+} /* namespace cms */

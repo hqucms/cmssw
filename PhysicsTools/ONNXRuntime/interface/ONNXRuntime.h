@@ -18,8 +18,11 @@
 
 #include "onnxruntime/core/session/onnxruntime_cxx_api.h"
 
+namespace cms {
+
 namespace Ort {
 
+  using namespace ::Ort;
   typedef std::vector<std::vector<float>> FloatArrays;
 
   class ONNXRuntime {
@@ -62,5 +65,7 @@ namespace Ort {
   };
 
 }  // namespace Ort
+
+}  // namespace cms
 
 #endif /* PHYSICSTOOLS_ONNXRUNTIME_INTERFACE_ONNXRUNTIME_H_ */
