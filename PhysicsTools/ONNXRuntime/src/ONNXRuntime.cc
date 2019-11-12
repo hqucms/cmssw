@@ -13,6 +13,7 @@
 #include <numeric>
 #include <functional>
 #include "FWCore/Utilities/interface/Exception.h"
+#include "FWCore/Utilities/interface/thread_safety_macros.h"
 
 namespace cms {
 
