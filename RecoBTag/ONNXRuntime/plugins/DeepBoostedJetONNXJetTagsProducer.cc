@@ -20,7 +20,7 @@
 #include <algorithm>
 #include <numeric>
 
-using namespace Ort;
+using namespace cms::Ort;
 
 // struct to hold preprocessing parameters
 struct PreprocessParams {

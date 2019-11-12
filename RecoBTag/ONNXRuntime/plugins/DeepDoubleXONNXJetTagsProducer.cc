@@ -17,7 +17,7 @@
 
 #include <algorithm>
 
-using namespace Ort;
+using namespace cms::Ort;
 
 class DeepDoubleXONNXJetTagsProducer : public edm::stream::EDProducer<edm::GlobalCache<ONNXRuntime>> {
 public:

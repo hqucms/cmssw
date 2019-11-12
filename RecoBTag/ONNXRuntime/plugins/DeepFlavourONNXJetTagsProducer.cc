@@ -15,7 +15,7 @@
 
 #include "PhysicsTools/ONNXRuntime/interface/ONNXRuntime.h"
 
-using namespace Ort;
+using namespace cms::Ort;
 
 class DeepFlavourONNXJetTagsProducer : public edm::stream::EDProducer<edm::GlobalCache<ONNXRuntime>> {
 public:
