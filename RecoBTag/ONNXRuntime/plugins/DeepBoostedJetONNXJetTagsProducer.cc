@@ -82,7 +82,7 @@ private:
 };
 
 DeepBoostedJetONNXJetTagsProducer::DeepBoostedJetONNXJetTagsProducer(const edm::ParameterSet &iConfig,
-                                                               const ONNXRuntime *cache)
+                                                                     const ONNXRuntime *cache)
     : src_(consumes<TagInfoCollection>(iConfig.getParameter<edm::InputTag>("src"))),
       flav_names_(iConfig.getParameter<std::vector<std::string>>("flav_names")),
       debug_(iConfig.getUntrackedParameter<bool>("debugMode", false)) {
@@ -227,12 +227,12 @@ void DeepBoostedJetONNXJetTagsProducer::produce(edm::Event &iEvent, const edm::E
 }
 
 std::vector<float> DeepBoostedJetONNXJetTagsProducer::center_norm_pad(const std::vector<float> &input,
-                                                                   float center,
-                                                                   float norm_factor,
-                                                                   unsigned target_length,
-                                                                   float pad_value,
-                                                                   float min,
-                                                                   float max) {
+                                                                      float center,
+                                                                      float norm_factor,
+                                                                      unsigned target_length,
+                                                                      float pad_value,
+                                                                      float min,
+                                                                      float max) {
   // do variable shifting/scaling/padding/clipping in one go
 
   assert(min <= pad_value && pad_value <= max);
