@@ -152,29 +152,13 @@ void ParticleNetJetTagsProducer::fillDescriptions(edm::ConfigurationDescriptions
                             edm::FileInPath("RecoBTag/Combined/data/DeepBoostedJet/V01/full/resnet-symbol.json"));
   desc.add<edm::FileInPath>("param_path",
                             edm::FileInPath("RecoBTag/Combined/data/DeepBoostedJet/V01/full/resnet-0000.params"));
-  desc.add<std::vector<std::string>>("flav_names",
-                                     std::vector<std::string>{
-                                         "probTbcq",
-                                         "probTbqq",
-                                         "probTbc",
-                                         "probTbq",
-                                         "probTbel",
-                                         "probTbmu",
-                                         "probTbta",
-                                         "probWcq",
-                                         "probWqq",
-                                         "probZbb",
-                                         "probZcc",
-                                         "probZqq",
-                                         "probHbb",
-                                         "probHcc",
-                                         "probHqqqq",
-                                         "probQCDbb",
-                                         "probQCDcc",
-                                         "probQCDb",
-                                         "probQCDc",
-                                         "probQCDothers",
-                                     });
+  desc.add<std::vector<std::string>>(
+      "flav_names",
+      std::vector<std::string>{
+          "probTbcq",  "probTbqq",  "probTbc",   "probTbq",  "probTbel", "probTbmu",      "probTbta",
+          "probWcq",   "probWqq",   "probZbb",   "probZcc",  "probZqq",  "probHbb",       "probHcc",
+          "probHqqqq", "probQCDbb", "probQCDcc", "probQCDb", "probQCDc", "probQCDothers",
+      });
   desc.addOptionalUntracked<bool>("debugMode", false);
 
   descriptions.add("pfParticleNetJetTags", desc);

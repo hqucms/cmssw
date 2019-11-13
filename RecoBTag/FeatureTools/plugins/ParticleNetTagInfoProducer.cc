@@ -73,14 +73,13 @@ private:
 };
 
 const std::vector<std::string> ParticleNetTagInfoProducer::particle_features_{
-    "pfcand_mask",          "pfcand_VTX_ass",        "pfcand_lostInnerHits",
-    "pfcand_quality",       "pfcand_charge",         "pfcand_isEl",         "pfcand_isMu",
-    "pfcand_isChargedHad",  "pfcand_isGamma",        "pfcand_isNeutralHad", "pfcand_phirel",
-    "pfcand_etarel",        "pfcand_abseta",         "pfcand_pt_log_nopuppi",
-    "pfcand_e_log_nopuppi", "pfcand_normchi2",       "pfcand_dz",           "pfcand_dzsig",
-    "pfcand_dxy",           "pfcand_dxysig",         "pfcand_btagEtaRel",   "pfcand_btagPtRatio",
-    "pfcand_btagPParRatio", "pfcand_btagSip2dVal",   "pfcand_btagSip2dSig", "pfcand_btagSip3dVal",
-    "pfcand_btagSip3dSig",  "pfcand_btagJetDistVal",
+    "pfcand_mask",         "pfcand_VTX_ass",        "pfcand_lostInnerHits", "pfcand_quality",
+    "pfcand_charge",       "pfcand_isEl",           "pfcand_isMu",          "pfcand_isChargedHad",
+    "pfcand_isGamma",      "pfcand_isNeutralHad",   "pfcand_phirel",        "pfcand_etarel",
+    "pfcand_abseta",       "pfcand_pt_log_nopuppi", "pfcand_e_log_nopuppi", "pfcand_normchi2",
+    "pfcand_dz",           "pfcand_dzsig",          "pfcand_dxy",           "pfcand_dxysig",
+    "pfcand_btagEtaRel",   "pfcand_btagPtRatio",    "pfcand_btagPParRatio", "pfcand_btagSip2dVal",
+    "pfcand_btagSip2dSig", "pfcand_btagSip3dVal",   "pfcand_btagSip3dSig",  "pfcand_btagJetDistVal",
 };
 
 const std::vector<std::string> ParticleNetTagInfoProducer::sv_features_{
@@ -252,7 +251,7 @@ void ParticleNetTagInfoProducer::fillParticleFeatures(DeepBoostedJetFeatures &ft
     daughters.push_back(pfcands_->ptrAt(cand.key()));
   }
   // sort by original pt (not Puppi-weighted)
-  std::sort(daughters.begin(), daughters.end(), [](const auto &a, const auto &b) {return a->pt() > b->pt();});
+  std::sort(daughters.begin(), daughters.end(), [](const auto &a, const auto &b) { return a->pt() > b->pt(); });
 
   // reserve space
   for (const auto &name : particle_features_) {
@@ -269,7 +268,6 @@ void ParticleNetTagInfoProducer::fillParticleFeatures(DeepBoostedJetFeatures &ft
     const auto *reco_cand = dynamic_cast<const reco::PFCandidate *>(&(*cand));
 
     if (packed_cand) {
-
       fts.fill("pfcand_VTX_ass", packed_cand->pvAssociationQuality());
       fts.fill("pfcand_lostInnerHits", packed_cand->lostInnerHits());
       fts.fill("pfcand_quality", packed_cand->bestTrack() ? packed_cand->bestTrack()->qualityMask() : 0);
@@ -304,7 +302,6 @@ void ParticleNetTagInfoProducer::fillParticleFeatures(DeepBoostedJetFeatures &ft
       fts.fill("pfcand_lostInnerHits", useTrackProperties(reco_cand) ? lost_inner_hits_from_pfcand(*reco_cand) : 0);
       fts.fill("pfcand_quality", useTrackProperties(reco_cand) ? quality_from_pfcand(*reco_cand) : 0);
 
-      fts.fill("pfcand_mask", 1);
       fts.fill("pfcand_charge", reco_cand->charge());
       fts.fill("pfcand_isEl", std::abs(reco_cand->pdgId()) == 11);
       fts.fill("pfcand_isMu", std::abs(reco_cand->pdgId()) == 13);
@@ -323,6 +320,7 @@ void ParticleNetTagInfoProducer::fillParticleFeatures(DeepBoostedJetFeatures &ft
     }
 
     // basic kinematics
+    fts.fill("pfcand_mask", 1);
     fts.fill("pfcand_phirel", reco::deltaPhi(*cand, jet));
     fts.fill("pfcand_etarel", etasign * (cand->eta() - jet.eta()));
     fts.fill("pfcand_abseta", std::abs(cand->eta()));
