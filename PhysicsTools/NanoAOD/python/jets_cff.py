@@ -410,8 +410,23 @@ run2_miniAOD_80XLegacy.toModify( fatJetTable.variables, n2b1 = None)
 run2_miniAOD_80XLegacy.toModify( fatJetTable.variables, n3b1 = None)
 run2_jme_2016.toModify( fatJetTable.variables, jetId = Var("userInt('tightId')*2+userInt('looseId')",int,doc="Jet ID flags bit1 is loose, bit2 is tight"))
 
+# add ParticleNet meta taggers
+from RecoBTag.MXNet.pfParticleNet_cff import _pfParticleNetJetTagsMetaDiscrs, _pfMassDecorrelatedParticleNetJetTagsMetaDiscrs
+for prob in _pfParticleNetJetTagsMetaDiscrs:
+    name = 'ParticleNet_' + prob.split(':')[1]
+    setattr(fatJetTable.variables, name, Var("bDiscriminator('%s')" % prob, float, doc=prob, precision=-1))
+for prob in _pfMassDecorrelatedParticleNetJetTagsMetaDiscrs:
+    name = 'ParticleNetMD_' + prob.split(':')[1]
+    setattr(fatJetTable.variables, name, Var("bDiscriminator('%s')" % prob, float, doc=prob, precision=-1))
 
-
+# add ParticleNet probs
+from RecoBTag.MXNet.pfParticleNet_cff import _pfParticleNetJetTagsProbs, _pfMassDecorrelatedParticleNetJetTagsProbs
+for prob in _pfParticleNetJetTagsProbs:
+    name = 'ParticleNet_' + prob.split(':')[1]
+    setattr(fatJetTable.variables, name, Var("bDiscriminator('%s')" % prob, float, doc=prob, precision=-1))
+for prob in _pfMassDecorrelatedParticleNetJetTagsProbs:
+    name = 'ParticleNetMD_' + prob.split(':')[1]
+    setattr(fatJetTable.variables, name, Var("bDiscriminator('%s')" % prob, float, doc=prob, precision=-1))
 
 subJetTable = cms.EDProducer("SimpleCandidateFlatTableProducer",
     src = cms.InputTag("slimmedJetsAK8PFPuppiSoftDropPacked","SubJets"),
