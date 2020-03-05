@@ -46,7 +46,7 @@ private:
   const double jet_radius_;
   const double min_jet_pt_;
   const double min_pt_for_track_properties_;
-  const double use_puppiP4_;
+  const bool use_puppiP4_;
 
   edm::EDGetTokenT<edm::View<reco::Jet>> jet_token_;
   edm::EDGetTokenT<VertexCollection> vtx_token_;
@@ -112,7 +112,7 @@ DeepBoostedJetTagInfoProducer::DeepBoostedJetTagInfoProducer(const edm::Paramete
     : jet_radius_(iConfig.getParameter<double>("jet_radius")),
       min_jet_pt_(iConfig.getParameter<double>("min_jet_pt")),
       min_pt_for_track_properties_(iConfig.getParameter<double>("min_pt_for_track_properties")),
-      use_puppiP4_(iConfig.getParameter<double>("use_puppiP4")),
+      use_puppiP4_(iConfig.getParameter<bool>("use_puppiP4")),
       jet_token_(consumes<edm::View<reco::Jet>>(iConfig.getParameter<edm::InputTag>("jets"))),
       vtx_token_(consumes<VertexCollection>(iConfig.getParameter<edm::InputTag>("vertices"))),
       sv_token_(consumes<SVCollection>(iConfig.getParameter<edm::InputTag>("secondary_vertices"))),
