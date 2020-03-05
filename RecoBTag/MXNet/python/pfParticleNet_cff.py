@@ -7,7 +7,7 @@ from RecoBTag.MXNet.pfParticleNetDiscriminatorsJetTags_cfi import pfParticleNetD
 from RecoBTag.MXNet.pfMassDecorrelatedParticleNetDiscriminatorsJetTags_cfi import pfMassDecorrelatedParticleNetDiscriminatorsJetTags
 
 pfParticleNetTagInfos = pfDeepBoostedJetTagInfos.clone(
-    use_puppi_weighted_candidates = False
+    use_puppiP4 = False
 )
 
 pfParticleNetJetTags = boostedJetMXNetJetTagsProducer.clone(
