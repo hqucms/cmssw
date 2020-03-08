@@ -720,6 +720,15 @@ def setupBTagging(process, jetSource, pfCandidates, explicitJTA, pvSource, svSou
                     process,
                     task
                 )
+            elif isinstance(getattr(btag, btagDiscr), SwitchProducerONNX):
+                addToProcessAndTask(
+                    newDiscr,
+                    getattr(btag, btagDiscr).deep_clone(
+                        src = btagPrefix + supportedBtagDiscr[discriminator_name][0][0] + labelName + postfix
+                    ),
+                    process,
+                    task
+                )
             else:
                 raise ValueError('I do not know how to update %s it does not have neither "tagInfos" nor "src" attributes' % btagDiscr)
             acceptedBtagDiscriminators.append(discriminator_name)

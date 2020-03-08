@@ -1,4 +1,5 @@
 import FWCore.ParameterSet.Config as cms
+import six
 
 _onnxrt_enabled_cached = None
 
@@ -19,6 +20,12 @@ class SwitchProducerONNX(cms.SwitchProducer):
                  onnx = _switch_onnxruntime),
             **kwargs
         )
+
+    def deep_clone(self, **params):
+        return super(SwitchProducerONNX, self).clone(
+            native = self.native.clone(**params),
+            onnx = self.onnx.clone(**params),
+            )
 
 
 cms.specialImportRegistry.registerSpecialImportForType(SwitchProducerONNX, "from RecoBTag.ONNXRuntime.SwitchProducerONNX import SwitchProducerONNX")
