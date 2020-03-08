@@ -281,6 +281,7 @@ def setupBTagging(process, jetSource, pfCandidates, explicitJTA, pvSource, svSou
             process.load("RecoBTag.CTagging.cTagging_EventSetup_cff")
     import RecoBTag.Configuration.RecoBTag_cff as btag
     import RecoJets.JetProducers.caTopTaggers_cff as toptag
+    from RecoBTag.ONNXRuntime.SwitchProducerONNX import SwitchProducerONNX
 
     if tightBTagNTkHits:
         if not runIVF:
