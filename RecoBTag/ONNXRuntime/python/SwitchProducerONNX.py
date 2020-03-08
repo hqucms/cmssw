@@ -1,0 +1,24 @@
+import FWCore.ParameterSet.Config as cms
+
+_onnxrt_enabled_cached = None
+
+
+def _switch_onnxruntime():
+    global _onnxrt_enabled_cached
+    if _onnxrt_enabled_cached is None:
+        import os
+        _onnxrt_enabled_cached = ('amd64' in os.environ['SCRAM_ARCH'] or 'aarch64' in os.environ['SCRAM_ARCH']) and ('DISABLE_ONNXRUNTIME' not in os.environ)
+    return (_onnxrt_enabled_cached, 2)
+
+
+class SwitchProducerONNX(cms.SwitchProducer):
+
+    def __init__(self, **kwargs):
+        super(SwitchProducerONNX, self).__init__(
+            dict(native = lambda: (True, 1),
+                 onnx = _switch_onnxruntime),
+            **kwargs
+        )
+
+
+cms.specialImportRegistry.registerSpecialImportForType(SwitchProducerONNX, "from RecoBTag.ONNXRuntime.SwitchProducerONNX import SwitchProducerONNX")
