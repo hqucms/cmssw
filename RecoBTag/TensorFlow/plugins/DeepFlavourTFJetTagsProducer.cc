@@ -123,7 +123,7 @@ std::unique_ptr<tensorflow::GraphDef> DeepFlavourTFJetTagsProducer::initializeGl
     const edm::ParameterSet& iConfig) {
   // set the tensorflow log level to error
   tensorflow::setLogging("3");
-  return std::unique_ptr<GraphDef>(
+  return std::unique_ptr<tensorflow::GraphDef>(
       tensorflow::loadGraphDef(iConfig.getParameter<edm::FileInPath>("model_path").fullPath()));
 }
 
@@ -191,14 +191,14 @@ void DeepFlavourTFJetTagsProducer::make_inputs(unsigned i_jet, const reco::DeepF
 
   // c_pf candidates
   auto max_c_pf_n = std::min(features.c_pf_features.size(), (std::size_t)n_cpf_);
-  btagbtvdeep::c_pf_tensor_filler(&data_[kChargedCandidates].second.tensor<float>()(i_jet, 0, 0),
+  btagbtvdeep::c_pf_tensor_filler(&data_[kChargedCandidates].second.tensor<float, 3>()(i_jet, 0, 0),
                                   max_c_pf_n,
                                   features.c_pf_features,
                                   n_features_cpf_);
 
   // n_pf candidates
   auto max_n_pf_n = std::min(features.n_pf_features.size(), (std::size_t)n_npf_);
-  btagbtvdeep::n_pf_tensor_filler(&data_[kNeutralCandidates].second.tensor<float>()(i_jet, 0, 0),
+  btagbtvdeep::n_pf_tensor_filler(&data_[kNeutralCandidates].second.tensor<float, 3>()(i_jet, 0, 0),
                                   max_n_pf_n,
                                   features.n_pf_features,
                                   n_features_npf_);
@@ -206,7 +206,7 @@ void DeepFlavourTFJetTagsProducer::make_inputs(unsigned i_jet, const reco::DeepF
   // sv candidates
   auto max_sv_n = std::min(features.sv_features.size(), (std::size_t)n_sv_);
   btagbtvdeep::sv_tensor_filler(
-      &data_[kVertices].second.tensor<float>()(i_jet, 0, 0), max_sv_n, features.sv_features, n_features_sv_);
+      &data_[kVertices].second.tensor<float, 3>()(i_jet, 0, 0), max_sv_n, features.sv_features, n_features_sv_);
 
   // last input: jet pt
   data_[kJetPt].second.matrix<float>(i_jet, 0) = features.jet_features.pt;
