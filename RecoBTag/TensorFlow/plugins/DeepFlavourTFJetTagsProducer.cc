@@ -24,7 +24,7 @@ public:
   static void fillDescriptions(edm::ConfigurationDescriptions&);
 
   static std::unique_ptr<tensorflow::GraphDef> initializeGlobalCache(const edm::ParameterSet&);
-  static void globalEndJob(tensorflow::GraphDef*);
+  static void globalEndJob(const tensorflow::GraphDef*);
 
 private:
   typedef std::vector<reco::DeepFlavourTagInfo> TagInfoCollection;
@@ -127,10 +127,7 @@ std::unique_ptr<tensorflow::GraphDef> DeepFlavourTFJetTagsProducer::initializeGl
       tensorflow::loadGraphDef(iConfig.getParameter<edm::FileInPath>("model_path").fullPath()));
 }
 
-void DeepFlavourTFJetTagsProducer::globalEndJob(tensorflow::GraphDef* cache) {
-  if (cache != nullptr)
-    delete cache;
-}
+void DeepFlavourTFJetTagsProducer::globalEndJob(const tensorflow::GraphDef* cache) {}
 
 void DeepFlavourTFJetTagsProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
   edm::Handle<TagInfoCollection> tag_infos;
