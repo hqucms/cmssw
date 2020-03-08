@@ -209,7 +209,7 @@ void DeepFlavourTFJetTagsProducer::make_inputs(unsigned i_jet, const reco::DeepF
       &data_[kVertices].second.tensor<float, 3>()(i_jet, 0, 0), max_sv_n, features.sv_features, n_features_sv_);
 
   // last input: jet pt
-  data_[kJetPt].second.matrix<float>(i_jet, 0) = features.jet_features.pt;
+  data_[kJetPt].second.matrix<float>()(i_jet, 0) = features.jet_features.pt;
 }
 
 //define this as a plug-in
