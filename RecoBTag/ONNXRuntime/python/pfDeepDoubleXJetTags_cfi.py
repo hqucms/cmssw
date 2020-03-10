@@ -32,18 +32,18 @@ pfMassIndependentDeepDoubleBvLJetTags = SwitchProducerONNX(
 
 pfMassIndependentDeepDoubleCvLJetTags = SwitchProducerONNX(
     native = pfDeepDoubleCvLTFJetTags.clone(
-        model_path = 'RecoBTag/Combined/data/DeepDoubleX/94X/V01/DDB_mass_independent.pb'
+        model_path = 'RecoBTag/Combined/data/DeepDoubleX/94X/V01/DDC_mass_independent.pb'
         ),
     onnx = pfDeepDoubleCvLONNXJetTags.clone(
-        model_path = 'RecoBTag/Combined/data/DeepDoubleX/94X/V01/DDB_mass_independent.onnx'
+        model_path = 'RecoBTag/Combined/data/DeepDoubleX/94X/V01/DDC_mass_independent.onnx'
         ),
 )
 
 pfMassIndependentDeepDoubleCvBJetTags = SwitchProducerONNX(
     native = pfDeepDoubleCvBTFJetTags.clone(
-        model_path = 'RecoBTag/Combined/data/DeepDoubleX/94X/V01/DDB_mass_independent.pb'
+        model_path = 'RecoBTag/Combined/data/DeepDoubleX/94X/V01/DDCvB_mass_independent.pb'
         ),
     onnx = pfDeepDoubleCvBONNXJetTags.clone(
-        model_path = 'RecoBTag/Combined/data/DeepDoubleX/94X/V01/DDB_mass_independent.onnx'
+        model_path = 'RecoBTag/Combined/data/DeepDoubleX/94X/V01/DDCvB_mass_independent.onnx'
         ),
 )
