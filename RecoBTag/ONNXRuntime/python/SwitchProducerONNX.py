@@ -21,7 +21,7 @@ class SwitchProducerONNX(cms.SwitchProducer):
             **kwargs
         )
 
-    def deep_clone(self, **params):
+    def cloneAll(self, **params):
         return super(SwitchProducerONNX, self).clone(
             native = self.native.clone(**params),
             onnx = self.onnx.clone(**params),

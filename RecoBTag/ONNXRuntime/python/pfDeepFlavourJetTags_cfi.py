@@ -1,8 +1,8 @@
 from RecoBTag.ONNXRuntime.SwitchProducerONNX import SwitchProducerONNX
-from RecoBTag.ONNXRuntime.deepFlavourONNXJetTagsProducer_cfi import deepFlavourONNXJetTagsProducer
-from RecoBTag.TensorFlow.deepFlavourTFJetTagsProducer_cfi import deepFlavourTFJetTagsProducer
+from RecoBTag.ONNXRuntime.pfDeepFlavourONNXJetTags_cfi import pfDeepFlavourONNXJetTags
+from RecoBTag.TensorFlow.pfDeepFlavourTFJetTags_cfi import pfDeepFlavourTFJetTags
 
 pfDeepFlavourJetTags = SwitchProducerONNX(
-    native = deepFlavourTFJetTagsProducer.clone(),
-    onnx = deepFlavourONNXJetTagsProducer.clone(),
+    native = pfDeepFlavourTFJetTags.clone(),
+    onnx = pfDeepFlavourONNXJetTags.clone(),
 )

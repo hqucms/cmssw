@@ -724,7 +724,7 @@ def setupBTagging(process, jetSource, pfCandidates, explicitJTA, pvSource, svSou
             elif isinstance(getattr(btag, btagDiscr), SwitchProducerONNX):
                 addToProcessAndTask(
                     newDiscr,
-                    getattr(btag, btagDiscr).deep_clone(
+                    getattr(btag, btagDiscr).cloneAll(
                         src = btagPrefix + supportedBtagDiscr[discriminator_name][0][0] + labelName + postfix
                     ),
                     process,

@@ -116,7 +116,7 @@ void DeepFlavourTFJetTagsProducer::fillDescriptions(edm::ConfigurationDescriptio
   desc.add<unsigned int>("nThreads", 1);
   desc.add<std::string>("singleThreadPool", "no_threads");
 
-  descriptions.addWithDefaultLabel(desc);
+  descriptions.add("pfDeepFlavourTFJetTags", desc);
 }
 
 std::unique_ptr<tensorflow::GraphDef> DeepFlavourTFJetTagsProducer::initializeGlobalCache(
