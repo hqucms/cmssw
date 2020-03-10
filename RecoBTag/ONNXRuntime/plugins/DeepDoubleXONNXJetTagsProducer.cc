@@ -12,6 +12,7 @@
 #include "DataFormats/BTauReco/interface/JetTag.h"
 
 #include "DataFormats/BTauReco/interface/DeepDoubleXTagInfo.h"
+#include "RecoBTag/FeatureTools/interface/tensor_fillers.h"
 
 #include "PhysicsTools/ONNXRuntime/interface/ONNXRuntime.h"
 

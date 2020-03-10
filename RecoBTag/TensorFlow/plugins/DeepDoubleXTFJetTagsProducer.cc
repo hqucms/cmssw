@@ -55,7 +55,7 @@ private:
   tensorflow::Session* session_ = nullptr;
 };
 
-const std::vector<tensorflow::TensorShape> DeepFlavourTFJetTagsProducer::input_shapes_{
+const std::vector<tensorflow::TensorShape> DeepDoubleXTFJetTagsProducer::input_shapes_{
     {1, n_features_global_},
     {1, n_cpf_, n_features_cpf_},
     {1, n_sv_, n_features_sv_},
