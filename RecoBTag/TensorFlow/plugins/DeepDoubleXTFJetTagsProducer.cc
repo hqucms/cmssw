@@ -183,11 +183,13 @@ void DeepDoubleXTFJetTagsProducer::produce(edm::Event& iEvent, const edm::EventS
     for (unsigned jet_n = 0; jet_n < tag_infos->size(); ++jet_n) {
       const auto& taginfo = tag_infos->at(jet_n);
       const auto& jet_ref = taginfo.jet();
-      for (std::size_t flav_n = 0; flav_n < flav_names_.size(); flav_n++) {
-        if (!taginfo.features().empty()) {
+      if (!taginfo.features().empty()) {
+        for (std::size_t flav_n = 0; flav_n < flav_names_.size(); flav_n++) {
           (*(output_tags[flav_n]))[jet_ref] = outputs.at(0).matrix<float>()(idx, flav_n);
-          ++idx;
-        } else {
+        }
+        ++idx;
+      } else {
+        for (std::size_t flav_n = 0; flav_n < flav_names_.size(); flav_n++) {
           (*(output_tags[flav_n]))[jet_ref] = -1.;
         }
       }
