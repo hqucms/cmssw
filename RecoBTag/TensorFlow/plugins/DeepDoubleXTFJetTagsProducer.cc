@@ -72,11 +72,6 @@ DeepDoubleXTFJetTagsProducer::DeepDoubleXTFJetTagsProducer(const edm::ParameterS
     data_.emplace_back(name, tensorflow::Tensor());
   }
 
-  for (const auto& name : iConfig.getParameter<std::vector<std::string>>("lp_names")) {
-    data_.emplace_back(name, tensorflow::Tensor(tensorflow::DT_BOOL, {}));
-    data_.back().second.scalar<bool>()() = false;
-  }
-
   // get threading config and build session options
   size_t nThreads = iConfig.getParameter<unsigned int>("nThreads");
   std::string singleThreadPool = iConfig.getParameter<std::string>("singleThreadPool");
@@ -104,7 +99,6 @@ void DeepDoubleXTFJetTagsProducer::fillDescriptions(edm::ConfigurationDescriptio
   edm::ParameterSetDescription desc;
   desc.add<edm::InputTag>("src", edm::InputTag("pfDeepDoubleXTagInfos"));
   desc.add<std::vector<std::string>>("input_names", {"input_1", "input_2", "input_3"});
-  desc.add<std::vector<std::string>>("lp_names", {"db_input_batchnorm/keras_learning_phase"});
   desc.add<std::vector<std::string>>("output_names", {"ID_pred/Softmax"});
   desc.add<unsigned int>("nThreads", 1);
   desc.add<std::string>("singleThreadPool", "no_threads");
