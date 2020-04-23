@@ -31,7 +31,8 @@ struct PreprocessParams {
     float norm_factor = 1;
   };
 
-  unsigned var_length = 0;
+  unsigned min_length = 0;
+  unsigned max_length = 0;
   std::vector<std::string> var_names;
   std::unordered_map<std::string, VarInfo> var_info_map;
 
@@ -64,16 +65,18 @@ private:
   std::vector<float> center_norm_pad(const std::vector<float> &input,
                                      float center,
                                      float scale,
-                                     unsigned target_length,
+                                     unsigned min_length,
+                                     unsigned max_length,
                                      float pad_value = 0,
                                      float min = 0,
                                      float max = -1);
   void make_inputs(const reco::DeepBoostedJetTagInfo &taginfo);
 
   const edm::EDGetTokenT<TagInfoCollection> src_;
-  std::vector<std::string> flav_names_;                  // names of the output scores
-  std::vector<std::string> input_names_;                 // names of each input group - the ordering is important!
-  std::vector<std::vector<unsigned int>> input_shapes_;  // shapes of each input group
+  std::vector<std::string> flav_names_;             // names of the output scores
+  std::vector<std::string> input_names_;            // names of each input group - the ordering is important!
+  std::vector<std::vector<int64_t>> input_shapes_;  // shapes of each input group (-1 for dynamic axis)
+  std::vector<unsigned> input_sizes_;               // total length of each input vector
   std::unordered_map<std::string, PreprocessParams> prep_info_map_;  // preprocessing info for each input group
 
   FloatArrays data_;
@@ -91,10 +94,16 @@ DeepBoostedJetONNXJetTagsProducer::DeepBoostedJetONNXJetTagsProducer(const edm::
   input_names_ = prep_pset.getParameter<std::vector<std::string>>("input_names");
   for (const auto &group_name : input_names_) {
     const auto &group_pset = prep_pset.getParameterSet(group_name);
-    input_shapes_.push_back(group_pset.getParameter<std::vector<unsigned>>("input_shape"));
     auto &prep_params = prep_info_map_[group_name];
-    prep_params.var_length = group_pset.getParameter<unsigned>("var_length");
     prep_params.var_names = group_pset.getParameter<std::vector<std::string>>("var_names");
+    if (group_pset.existsAs<unsigned>("var_length")) {
+      prep_params.min_length = group_pset.getParameter<unsigned>("var_length");
+      prep_params.max_length = prep_params.min_length;
+    } else {
+      prep_params.min_length = group_pset.getParameter<unsigned>("min_length");
+      prep_params.max_length = group_pset.getParameter<unsigned>("max_length");
+      input_shapes_.push_back({1, (int64_t)prep_params.var_names.size(), -1});
+    }
     const auto &var_info_pset = group_pset.getParameterSet("var_infos");
     for (const auto &var_name : prep_params.var_names) {
       const auto &var_pset = var_info_pset.getParameterSet(var_name);
@@ -104,16 +113,18 @@ DeepBoostedJetONNXJetTagsProducer::DeepBoostedJetONNXJetTagsProducer(const edm::
     }
 
     // create data storage with a fixed size vector initilized w/ 0
-    unsigned len = prep_params.var_length * prep_params.var_names.size();
+    const auto &len = input_sizes_.emplace_back(prep_params.max_length * prep_params.var_names.size());
     data_.emplace_back(len, 0);
   }
 
   if (debug_) {
     for (unsigned i = 0; i < input_names_.size(); ++i) {
       const auto &group_name = input_names_.at(i);
-      std::cout << group_name << "\nshapes: ";
-      for (const auto &x : input_shapes_.at(i)) {
-        std::cout << x << ", ";
+      if (!input_shapes_.empty()) {
+        std::cout << group_name << "\nshapes: ";
+        for (const auto &x : input_shapes_.at(i)) {
+          std::cout << x << ", ";
+        }
       }
       std::cout << "\nvariables: ";
       for (const auto &x : prep_info_map_.at(group_name).var_names) {
@@ -197,7 +208,7 @@ void DeepBoostedJetONNXJetTagsProducer::produce(edm::Event &iEvent, const edm::E
       // convert inputs
       make_inputs(taginfo);
       // run prediction and get outputs
-      outputs = globalCache()->run(input_names_, data_)[0];
+      outputs = globalCache()->run(input_names_, data_, input_shapes_)[0];
       assert(outputs.size() == flav_names_.size());
     }
 
@@ -229,14 +240,17 @@ void DeepBoostedJetONNXJetTagsProducer::produce(edm::Event &iEvent, const edm::E
 std::vector<float> DeepBoostedJetONNXJetTagsProducer::center_norm_pad(const std::vector<float> &input,
                                                                       float center,
                                                                       float norm_factor,
-                                                                      unsigned target_length,
+                                                                      unsigned min_length,
+                                                                      unsigned max_length,
                                                                       float pad_value,
                                                                       float min,
                                                                       float max) {
   // do variable shifting/scaling/padding/clipping in one go
 
   assert(min <= pad_value && pad_value <= max);
+  assert(min_length <= max_length);
 
+  unsigned target_length = std::clamp((unsigned)input.size(), min_length, max_length);
   std::vector<float> out(target_length, pad_value);
   for (unsigned i = 0; i < input.size() && i < target_length; ++i) {
     out[i] = std::clamp((input[i] - center) * norm_factor, min, max);
@@ -247,29 +261,36 @@ std::vector<float> DeepBoostedJetONNXJetTagsProducer::center_norm_pad(const std:
 void DeepBoostedJetONNXJetTagsProducer::make_inputs(const reco::DeepBoostedJetTagInfo &taginfo) {
   for (unsigned igroup = 0; igroup < input_names_.size(); ++igroup) {
     const auto &group_name = input_names_[igroup];
-    auto &group_values = data_[igroup];
     const auto &prep_params = prep_info_map_.at(group_name);
+    auto &group_values = data_[igroup];
+    group_values.resize(input_sizes_[igroup]);
     // first reset group_values to 0
     std::fill(group_values.begin(), group_values.end(), 0);
     unsigned curr_pos = 0;
     // transform/pad
-    for (const auto &varname : prep_params.var_names) {
+    for (unsigned i = 0; i < prep_params.var_names.size(); ++i) {
+      const auto &varname = prep_params.var_names[i];
       const auto &raw_value = taginfo.features().get(varname);
       const auto &info = prep_params.get_info(varname);
       const float pad = 0;  // pad w/ zero
-      auto val = center_norm_pad(raw_value, info.center, info.norm_factor, prep_params.var_length, pad, -5, 5);
+      auto val = center_norm_pad(
+          raw_value, info.center, info.norm_factor, prep_params.min_length, prep_params.max_length, pad, -5, 5);
       std::copy(val.begin(), val.end(), group_values.begin() + curr_pos);
-      curr_pos += prep_params.var_length;
+      curr_pos += val.size();
+      if (i == 0 && (!input_shapes_.empty())) {
+        input_shapes_[igroup][2] = val.size();
+      }
 
       if (debug_) {
         std::cout << " -- var=" << varname << ", center=" << info.center << ", scale=" << info.norm_factor
                   << ", pad=" << pad << std::endl;
-        std::cout << "values (first 7 and last 3): " << val.at(0) << ", " << val.at(1) << ", " << val.at(2) << ", "
-                  << val.at(3) << ", " << val.at(4) << ", " << val.at(5) << ", " << val.at(6) << " ... "
-                  << val.at(prep_params.var_length - 3) << ", " << val.at(prep_params.var_length - 2) << ", "
-                  << val.at(prep_params.var_length - 1) << std::endl;
+        for (const auto &v : val) {
+          std::cout << v << ",";
+        }
+        std::cout << std::endl;
       }
     }
+    group_values.resize(curr_pos);
   }
 }
 

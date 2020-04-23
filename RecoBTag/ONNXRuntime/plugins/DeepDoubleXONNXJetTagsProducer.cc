@@ -146,7 +146,7 @@ void DeepDoubleXONNXJetTagsProducer::produce(edm::Event& iEvent, const edm::Even
       }
 
       // run prediction
-      outputs = globalCache()->run(input_names_, data_, output_names_, batch_size)[0];
+      outputs = globalCache()->run(input_names_, data_, {}, output_names_, batch_size)[0];
       assert(outputs.size() == flav_names_.size() * batch_size);
     }
 
