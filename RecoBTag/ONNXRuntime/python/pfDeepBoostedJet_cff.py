@@ -1,24 +1,46 @@
 import FWCore.ParameterSet.Config as cms
 
+from Configuration.Eras.Modifier_run2_miniAOD_devel_cff import run2_miniAOD_devel
 from RecoBTag.FeatureTools.pfDeepBoostedJetTagInfos_cfi import pfDeepBoostedJetTagInfos
+from RecoBTag.MXNet.boostedJetMXNetJetTagsProducer_cfi import boostedJetMXNetJetTagsProducer
 from RecoBTag.ONNXRuntime.pfDeepBoostedJetTags_cfi import pfDeepBoostedJetTags as _pfDeepBoostedJetTags
 from RecoBTag.ONNXRuntime.Parameters.DeepBoostedJet.V02.pfDeepBoostedJetPreprocessParams_cfi import pfDeepBoostedJetPreprocessParams
 from RecoBTag.ONNXRuntime.Parameters.DeepBoostedJet.V02.pfMassDecorrelatedDeepBoostedJetPreprocessParams_cfi import pfMassDecorrelatedDeepBoostedJetPreprocessParams
 from RecoBTag.ONNXRuntime.pfDeepBoostedDiscriminatorsJetTags_cfi import pfDeepBoostedDiscriminatorsJetTags
 from RecoBTag.ONNXRuntime.pfMassDecorrelatedDeepBoostedDiscriminatorsJetTags_cfi import pfMassDecorrelatedDeepBoostedDiscriminatorsJetTags
 
-# nominal DeepAK8
-pfDeepBoostedJetTags = _pfDeepBoostedJetTags.clone(
+# nominal DeepAK8 (MXNet)
+pfDeepBoostedJetTags = boostedJetMXNetJetTagsProducer.clone(
     preprocessParams = pfDeepBoostedJetPreprocessParams,
-    model_path = 'RecoBTag/Combined/data/DeepBoostedJet/V02/full/resnet.onnx',
+    model_path = 'RecoBTag/Combined/data/DeepBoostedJet/V02/full/resnet-symbol.json',
+    param_path = 'RecoBTag/Combined/data/DeepBoostedJet/V02/full/resnet-0000.params',
     debugMode  = False, # debug
 )
 
-# mass-decorrelated DeepAK8
-pfMassDecorrelatedDeepBoostedJetTags = _pfDeepBoostedJetTags.clone(
+# mass-decorrelated DeepAK8 (MXNet)
+pfMassDecorrelatedDeepBoostedJetTags = boostedJetMXNetJetTagsProducer.clone(
     preprocessParams = pfMassDecorrelatedDeepBoostedJetPreprocessParams,
-    model_path = 'RecoBTag/Combined/data/DeepBoostedJet/V02/decorrelated/resnet.onnx',
+    model_path = 'RecoBTag/Combined/data/DeepBoostedJet/V02/decorrelated/resnet-symbol.json',
+    param_path = 'RecoBTag/Combined/data/DeepBoostedJet/V02/decorrelated/resnet-0000.params',
     debugMode = False, # debug
+)
+
+# nominal DeepAK8 (ONNXRuntime)
+run2_miniAOD_devel.toModify(pfDeepBoostedJetTags,
+    _pfDeepBoostedJetTags.clone(
+        preprocessParams = pfDeepBoostedJetPreprocessParams,
+        model_path = 'RecoBTag/Combined/data/DeepBoostedJet/V02/full/resnet.onnx',
+        debugMode  = False, # debug
+    )
+)
+
+# mass-decorrelated DeepAK8 (ONNXRuntime)
+run2_miniAOD_devel.toModify(pfMassDecorrelatedDeepBoostedJetTags,
+    _pfDeepBoostedJetTags.clone(
+        preprocessParams = pfMassDecorrelatedDeepBoostedJetPreprocessParams,
+        model_path = 'RecoBTag/Combined/data/DeepBoostedJet/V02/decorrelated/resnet.onnx',
+        debugMode = False, # debug
+    )
 )
 
 from CommonTools.PileupAlgos.Puppi_cff import puppi
