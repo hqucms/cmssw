@@ -11,9 +11,9 @@ pfMassIndependentDeepDoubleCvBJetTags = pfDeepDoubleCvBJetTags.clone(
 
 # ONNXRuntime-based implementation
 from Configuration.Eras.Modifier_run2_miniAOD_devel_cff import run2_miniAOD_devel
-from RecoBTag.ONNXRuntime.pfDeepDoubleBvLJetTags_cfi import _pfDeepDoubleBvLJetTags
-from RecoBTag.ONNXRuntime.pfDeepDoubleCvBJetTags_cfi import _pfDeepDoubleCvBJetTags
-from RecoBTag.ONNXRuntime.pfDeepDoubleCvLJetTags_cfi import _pfDeepDoubleCvLJetTags
+from RecoBTag.ONNXRuntime.pfDeepDoubleBvLJetTags_cfi import pfDeepDoubleBvLJetTags as _pfDeepDoubleBvLJetTags
+from RecoBTag.ONNXRuntime.pfDeepDoubleCvBJetTags_cfi import pfDeepDoubleCvBJetTags as _pfDeepDoubleCvBJetTags
+from RecoBTag.ONNXRuntime.pfDeepDoubleCvLJetTags_cfi import pfDeepDoubleCvLJetTags as _pfDeepDoubleCvLJetTags
 
 run2_miniAOD_devel.toModify(pfDeepDoubleBvLJetTags, _pfDeepDoubleBvLJetTags)
 run2_miniAOD_devel.toModify(pfDeepDoubleCvBJetTags, _pfDeepDoubleCvBJetTags)
