@@ -15,21 +15,21 @@ from RecoBTag.ONNXRuntime.pfDeepDoubleBvLJetTags_cfi import pfDeepDoubleBvLJetTa
 from RecoBTag.ONNXRuntime.pfDeepDoubleCvBJetTags_cfi import pfDeepDoubleCvBJetTags as _pfDeepDoubleCvBJetTags
 from RecoBTag.ONNXRuntime.pfDeepDoubleCvLJetTags_cfi import pfDeepDoubleCvLJetTags as _pfDeepDoubleCvLJetTags
 
-run2_miniAOD_devel.toModify(pfDeepDoubleBvLJetTags, _pfDeepDoubleBvLJetTags)
-run2_miniAOD_devel.toModify(pfDeepDoubleCvBJetTags, _pfDeepDoubleCvBJetTags)
-run2_miniAOD_devel.toModify(pfDeepDoubleCvLJetTags, _pfDeepDoubleCvLJetTags)
+run2_miniAOD_devel.toReplaceWith(pfDeepDoubleBvLJetTags, _pfDeepDoubleBvLJetTags)
+run2_miniAOD_devel.toReplaceWith(pfDeepDoubleCvBJetTags, _pfDeepDoubleCvBJetTags)
+run2_miniAOD_devel.toReplaceWith(pfDeepDoubleCvLJetTags, _pfDeepDoubleCvLJetTags)
 
-run2_miniAOD_devel.toModify(
+run2_miniAOD_devel.toReplaceWith(
     pfMassIndependentDeepDoubleBvLJetTags,
     _pfDeepDoubleBvLJetTags.clone(
         model_path = 'RecoBTag/Combined/data/DeepDoubleX/94X/V01/DDB_mass_independent.onnx')
 )
-run2_miniAOD_devel.toModify(
+run2_miniAOD_devel.toReplaceWith(
     pfMassIndependentDeepDoubleCvLJetTags,
     _pfDeepDoubleCvLJetTags.clone(
         model_path='RecoBTag/Combined/data/DeepDoubleX/94X/V01/DDC_mass_independent.onnx')
 )
-run2_miniAOD_devel.toModify(
+run2_miniAOD_devel.toReplaceWith(
     pfMassIndependentDeepDoubleCvBJetTags,
     _pfDeepDoubleCvBJetTags.clone(
         model_path='RecoBTag/Combined/data/DeepDoubleX/94X/V01/DDCvB_mass_independent.onnx')

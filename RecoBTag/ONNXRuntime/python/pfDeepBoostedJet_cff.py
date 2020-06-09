@@ -26,7 +26,7 @@ pfMassDecorrelatedDeepBoostedJetTags = boostedJetMXNetJetTagsProducer.clone(
 )
 
 # nominal DeepAK8 (ONNXRuntime)
-run2_miniAOD_devel.toModify(pfDeepBoostedJetTags,
+run2_miniAOD_devel.toReplaceWith(pfDeepBoostedJetTags,
     _pfDeepBoostedJetTags.clone(
         preprocessParams = pfDeepBoostedJetPreprocessParams,
         model_path = 'RecoBTag/Combined/data/DeepBoostedJet/V02/full/resnet.onnx',
@@ -35,7 +35,7 @@ run2_miniAOD_devel.toModify(pfDeepBoostedJetTags,
 )
 
 # mass-decorrelated DeepAK8 (ONNXRuntime)
-run2_miniAOD_devel.toModify(pfMassDecorrelatedDeepBoostedJetTags,
+run2_miniAOD_devel.toReplaceWith(pfMassDecorrelatedDeepBoostedJetTags,
     _pfDeepBoostedJetTags.clone(
         preprocessParams = pfMassDecorrelatedDeepBoostedJetPreprocessParams,
         model_path = 'RecoBTag/Combined/data/DeepBoostedJet/V02/decorrelated/resnet.onnx',
