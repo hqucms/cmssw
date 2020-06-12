@@ -10,12 +10,12 @@ pfParticleNetTagInfos = pfDeepBoostedJetTagInfos.clone(
 )
 
 pfParticleNetJetTags = boostedJetONNXJetTagsProducer.clone(
-    preprocess_json = 'RecoBTag/Combined/data/ParticleNetAK8/General/V00/preprocessing.json',
+    preprocess_json = 'RecoBTag/Combined/data/ParticleNetAK8/General/V00/preprocess.json',
     model_path = 'RecoBTag/Combined/data/ParticleNetAK8/General/V00/ParticleNet.onnx',
 )
 
 pfMassDecorrelatedParticleNetJetTags = boostedJetONNXJetTagsProducer.clone(
-    preprocess_json = 'RecoBTag/Combined/data/ParticleNetAK8/MD-2prong/V00/preprocessing.json',
+    preprocess_json = 'RecoBTag/Combined/data/ParticleNetAK8/MD-2prong/V00/preprocess.json',
     model_path = 'RecoBTag/Combined/data/ParticleNetAK8/MD-2prong/V00/ParticleNetMD.onnx',
 )
 
