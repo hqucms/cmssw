@@ -89,11 +89,12 @@ BoostedJetONNXJetTagsProducer::BoostedJetONNXJetTagsProducer(const edm::Paramete
     : src_(consumes<TagInfoCollection>(iConfig.getParameter<edm::InputTag>("src"))),
       debug_(iConfig.getUntrackedParameter<bool>("debugMode", false)) {
   // load preprocessing info
-  if (iConfig.exists("preprocess_json")) {
+  auto json_path = iConfig.getParameter<std::string>("preprocess_json");
+  if (!json_path.empty()) {
     // use preprocessing json file if available
-    std::ifstream ifs(iConfig.getParameter<edm::FileInPath>("preprocess_json").fullPath());
+    std::ifstream ifs(edm::FileInPath(json_path).fullPath());
     nlohmann::json j = nlohmann::json::parse(ifs);
-    j.at("output_names").get_to(flav_names_);
+    j.at("flav_names").get_to(flav_names_);
     j.at("input_names").get_to(input_names_);
     for (const auto &group_name : input_names_) {
       const auto &group_pset = j.at(group_name);
@@ -179,11 +180,11 @@ void BoostedJetONNXJetTagsProducer::fillDescriptions(edm::ConfigurationDescripti
   // pfDeepBoostedJetTags
   edm::ParameterSetDescription desc;
   desc.add<edm::InputTag>("src", edm::InputTag("pfDeepBoostedJetTagInfos"));
+  desc.add<std::string>("preprocess_json", "");
   desc.add<edm::FileInPath>("model_path",
                             edm::FileInPath("RecoBTag/Combined/data/DeepBoostedJet/V02/full/resnet.onnx"));
-  desc.addOptional<edm::FileInPath>("preprocess_json",
-                                    edm::FileInPath("RecoBTag/Combined/data/DeepBoostedJet/V02/full/resnet.onnx"));
-  // mark `preprocessParams` and `flav_names` as optional -- prefers to read them from the preprocessing json file
+  desc.addOptionalUntracked<bool>("debugMode", false);
+  // `preprocessParams` and `flav_names` are deprecated -- use the preprocessing json file instead
   edm::ParameterSetDescription preprocessParams;
   preprocessParams.setAllowAnything();
   desc.addOptional<edm::ParameterSetDescription>("preprocessParams", preprocessParams);
@@ -207,7 +208,6 @@ void BoostedJetONNXJetTagsProducer::fillDescriptions(edm::ConfigurationDescripti
                                                  "probQCDc",
                                                  "probQCDothers",
                                              });
-  desc.addOptionalUntracked<bool>("debugMode", false);
 
   descriptions.addWithDefaultLabel(desc);
 }
