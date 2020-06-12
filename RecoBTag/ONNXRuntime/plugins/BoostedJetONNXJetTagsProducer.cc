@@ -166,6 +166,11 @@ BoostedJetONNXJetTagsProducer::BoostedJetONNXJetTagsProducer(const edm::Paramete
       }
       std::cout << "\n";
     }
+    std::cout << "flav_names: ";
+    for (const auto &flav_name : flav_names_) {
+      std::cout << flav_name << ", ";
+    }
+    std::cout << "\n";
   }
 
   // get output names from flav_names
@@ -181,33 +186,33 @@ void BoostedJetONNXJetTagsProducer::fillDescriptions(edm::ConfigurationDescripti
   edm::ParameterSetDescription desc;
   desc.add<edm::InputTag>("src", edm::InputTag("pfDeepBoostedJetTagInfos"));
   desc.add<std::string>("preprocess_json", "");
-  desc.add<edm::FileInPath>("model_path",
-                            edm::FileInPath("RecoBTag/Combined/data/DeepBoostedJet/V02/full/resnet.onnx"));
-  desc.addOptionalUntracked<bool>("debugMode", false);
-  // `preprocessParams` and `flav_names` are deprecated -- use the preprocessing json file instead
+  // `preprocessParams` is deprecated -- use the preprocessing json file instead
   edm::ParameterSetDescription preprocessParams;
   preprocessParams.setAllowAnything();
   desc.addOptional<edm::ParameterSetDescription>("preprocessParams", preprocessParams);
-  desc.addOptional<std::vector<std::string>>("flav_names",
-                                             std::vector<std::string>{
-                                                 "probTbcq",
-                                                 "probTbqq",
-                                                 "probTbc",
-                                                 "probTbq",
-                                                 "probWcq",
-                                                 "probWqq",
-                                                 "probZbb",
-                                                 "probZcc",
-                                                 "probZqq",
-                                                 "probHbb",
-                                                 "probHcc",
-                                                 "probHqqqq",
-                                                 "probQCDbb",
-                                                 "probQCDcc",
-                                                 "probQCDb",
-                                                 "probQCDc",
-                                                 "probQCDothers",
-                                             });
+  desc.add<edm::FileInPath>("model_path",
+                            edm::FileInPath("RecoBTag/Combined/data/DeepBoostedJet/V02/full/resnet.onnx"));
+  desc.add<std::vector<std::string>>("flav_names",
+                                     std::vector<std::string>{
+                                         "probTbcq",
+                                         "probTbqq",
+                                         "probTbc",
+                                         "probTbq",
+                                         "probWcq",
+                                         "probWqq",
+                                         "probZbb",
+                                         "probZcc",
+                                         "probZqq",
+                                         "probHbb",
+                                         "probHcc",
+                                         "probHqqqq",
+                                         "probQCDbb",
+                                         "probQCDcc",
+                                         "probQCDb",
+                                         "probQCDc",
+                                         "probQCDothers",
+                                     });
+  desc.addOptionalUntracked<bool>("debugMode", false);
 
   descriptions.addWithDefaultLabel(desc);
 }
