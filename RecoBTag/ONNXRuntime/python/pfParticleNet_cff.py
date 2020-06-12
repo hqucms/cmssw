@@ -16,7 +16,7 @@ pfParticleNetJetTags = boostedJetONNXJetTagsProducer.clone(
 
 pfMassDecorrelatedParticleNetJetTags = boostedJetONNXJetTagsProducer.clone(
     preprocess_json = 'RecoBTag/Combined/data/ParticleNetAK8/MD-2prong/V00/preprocess.json',
-    model_path = 'RecoBTag/Combined/data/ParticleNetAK8/MD-2prong/V00/ParticleNetMD.onnx',
+    model_path = 'RecoBTag/Combined/data/ParticleNetAK8/MD-2prong/V00/ParticleNet.onnx',
 )
 
 from CommonTools.PileupAlgos.Puppi_cff import puppi
