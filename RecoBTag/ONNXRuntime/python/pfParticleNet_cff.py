@@ -1,27 +1,22 @@
 import FWCore.ParameterSet.Config as cms
 
 from RecoBTag.FeatureTools.pfDeepBoostedJetTagInfos_cfi import pfDeepBoostedJetTagInfos
-from RecoBTag.MXNet.boostedJetMXNetJetTagsProducer_cfi import boostedJetMXNetJetTagsProducer
-from RecoBTag.MXNet.Parameters.ParticleNet.V00.pfParticleNetPreprocessParams_cfi import pfParticleNetPreprocessParams, pfMassDecorrelatedParticleNetPreprocessParams
-from RecoBTag.MXNet.pfParticleNetDiscriminatorsJetTags_cfi import pfParticleNetDiscriminatorsJetTags
-from RecoBTag.MXNet.pfMassDecorrelatedParticleNetDiscriminatorsJetTags_cfi import pfMassDecorrelatedParticleNetDiscriminatorsJetTags
+from RecoBTag.ONNXRuntime.boostedJetONNXJetTagsProducer_cfi import boostedJetONNXJetTagsProducer
+from RecoBTag.ONNXRuntime.pfParticleNetDiscriminatorsJetTags_cfi import pfParticleNetDiscriminatorsJetTags
+from RecoBTag.ONNXRuntime.pfMassDecorrelatedParticleNetDiscriminatorsJetTags_cfi import pfMassDecorrelatedParticleNetDiscriminatorsJetTags
 
 pfParticleNetTagInfos = pfDeepBoostedJetTagInfos.clone(
     use_puppiP4 = False
 )
 
-pfParticleNetJetTags = boostedJetMXNetJetTagsProducer.clone(
-    preprocessParams = pfParticleNetPreprocessParams,
-    model_path = 'RecoBTag/Combined/data/ParticleNetAK8/General/V00/ParticleNet-symbol.json',
-    param_path = 'RecoBTag/Combined/data/ParticleNetAK8/General/V00/ParticleNet-0000.params',
+pfParticleNetJetTags = boostedJetONNXJetTagsProducer.clone(
+    preprocess_json = 'RecoBTag/Combined/data/ParticleNetAK8/General/V00/preprocessing.json',
+    model_path = 'RecoBTag/Combined/data/ParticleNetAK8/General/V00/ParticleNet.onnx',
 )
 
-pfMassDecorrelatedParticleNetJetTags = boostedJetMXNetJetTagsProducer.clone(
-    preprocessParams = pfMassDecorrelatedParticleNetPreprocessParams,
-    model_path = 'RecoBTag/Combined/data/ParticleNetAK8/MD-2prong/V00/ParticleNet-symbol.json',
-    param_path = 'RecoBTag/Combined/data/ParticleNetAK8/MD-2prong/V00/ParticleNet-0000.params',
-    flav_names = ["probXbb", "probXcc", "probXqq", "probQCDbb", "probQCDcc", 
-                  "probQCDb", "probQCDc", "probQCDothers"],
+pfMassDecorrelatedParticleNetJetTags = boostedJetONNXJetTagsProducer.clone(
+    preprocess_json = 'RecoBTag/Combined/data/ParticleNetAK8/MD-2prong/V00/preprocessing.json',
+    model_path = 'RecoBTag/Combined/data/ParticleNetAK8/MD-2prong/V00/ParticleNetMD.onnx',
 )
 
 from CommonTools.PileupAlgos.Puppi_cff import puppi
