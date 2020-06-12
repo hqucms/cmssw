@@ -87,6 +87,7 @@ private:
 
 BoostedJetONNXJetTagsProducer::BoostedJetONNXJetTagsProducer(const edm::ParameterSet &iConfig, const ONNXRuntime *cache)
     : src_(consumes<TagInfoCollection>(iConfig.getParameter<edm::InputTag>("src"))),
+      flav_names_(iConfig.getParameter<std::vector<std::string>>("flav_names")),
       debug_(iConfig.getUntrackedParameter<bool>("debugMode", false)) {
   // load preprocessing info
   auto json_path = iConfig.getParameter<std::string>("preprocess_json");
@@ -94,7 +95,6 @@ BoostedJetONNXJetTagsProducer::BoostedJetONNXJetTagsProducer(const edm::Paramete
     // use preprocessing json file if available
     std::ifstream ifs(edm::FileInPath(json_path).fullPath());
     nlohmann::json j = nlohmann::json::parse(ifs);
-    j.at("flav_names").get_to(flav_names_);
     j.at("input_names").get_to(input_names_);
     for (const auto &group_name : input_names_) {
       const auto &group_pset = j.at(group_name);
@@ -122,7 +122,6 @@ BoostedJetONNXJetTagsProducer::BoostedJetONNXJetTagsProducer(const edm::Paramete
     }
   } else {
     // otherwise use the PSet in the python config file
-    flav_names_ = iConfig.getParameter<std::vector<std::string>>("flav_names");
     const auto &prep_pset = iConfig.getParameterSet("preprocessParams");
     input_names_ = prep_pset.getParameter<std::vector<std::string>>("input_names");
     for (const auto &group_name : input_names_) {
