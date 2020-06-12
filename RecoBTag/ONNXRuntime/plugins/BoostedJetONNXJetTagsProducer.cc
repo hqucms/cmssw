@@ -91,9 +91,8 @@ BoostedJetONNXJetTagsProducer::BoostedJetONNXJetTagsProducer(const edm::Paramete
   // load preprocessing info
   if (iConfig.exists("preprocess_json")) {
     // use preprocessing json file if available
-    nlohmann::json j;
-    std::ifstream infile(iConfig.getParameter<edm::FileInPath>("preprocess_json").fullPath());
-    infile >> j;
+    std::ifstream ifs(iConfig.getParameter<edm::FileInPath>("preprocess_json").fullPath());
+    nlohmann::json j = nlohmann::json::parse(ifs);
     j.at("output_names").get_to(flav_names_);
     j.at("input_names").get_to(input_names_);
     for (const auto &group_name : input_names_) {
