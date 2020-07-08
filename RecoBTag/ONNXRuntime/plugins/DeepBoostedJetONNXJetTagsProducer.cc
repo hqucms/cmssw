@@ -258,7 +258,7 @@ void DeepBoostedJetONNXJetTagsProducer::make_inputs(const reco::DeepBoostedJetTa
     for (unsigned i = 0; i < prep_params.var_names.size(); ++i) {
       const auto &varname = prep_params.var_names[i];
       const auto &raw_value = taginfo.features().get(varname);
-      const auto &info = prep_params.get_info(varname);
+      const auto &info = prep_params.info(varname);
       auto val = center_norm_pad(raw_value,
                                  info.center,
                                  info.norm_factor,
