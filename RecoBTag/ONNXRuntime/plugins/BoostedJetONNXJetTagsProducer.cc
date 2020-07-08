@@ -93,10 +93,11 @@ BoostedJetONNXJetTagsProducer::BoostedJetONNXJetTagsProducer(const edm::Paramete
         const auto &var_pset = var_info_pset.at(var_name);
         double median = var_pset.at("median");
         double norm_factor = var_pset.at("norm_factor");
-        double replace_inf_value = var_pset.contains("replace_inf_value") ? var_pset.at("replace_inf_value") : 0;
-        double lower_bound = var_pset.contains("lower_bound") ? var_pset.at("lower_bound") : -5;
-        double upper_bound = var_pset.contains("upper_bound") ? var_pset.at("upper_bound") : 5;
-        double pad = var_pset.contains("pad") ? var_pset.at("pad") : 0;
+        double replace_inf_value =
+            var_pset.contains("replace_inf_value") ? double(var_pset.at("replace_inf_value")) : 0;
+        double lower_bound = var_pset.contains("lower_bound") ? double(var_pset.at("lower_bound")) : -5;
+        double upper_bound = var_pset.contains("upper_bound") ? double(var_pset.at("upper_bound")) : 5;
+        double pad = var_pset.contains("pad") ? double(var_pset.at("pad")) : 0;
         prep_params.var_info_map[var_name] =
             PreprocessParams::VarInfo(median, norm_factor, replace_inf_value, lower_bound, upper_bound, pad);
       }
@@ -268,15 +269,15 @@ void BoostedJetONNXJetTagsProducer::produce(edm::Event &iEvent, const edm::Event
   }
 }
 
-std::vector<float> DeepBoostedJetONNXJetTagsProducer::center_norm_pad(const std::vector<float> &input,
-                                                                      float center,
-                                                                      float norm_factor,
-                                                                      unsigned min_length,
-                                                                      unsigned max_length,
-                                                                      float pad_value,
-                                                                      float replace_inf_value,
-                                                                      float min,
-                                                                      float max) {
+std::vector<float> BoostedJetONNXJetTagsProducer::center_norm_pad(const std::vector<float> &input,
+                                                                  float center,
+                                                                  float norm_factor,
+                                                                  unsigned min_length,
+                                                                  unsigned max_length,
+                                                                  float pad_value,
+                                                                  float replace_inf_value,
+                                                                  float min,
+                                                                  float max) {
   // do variable shifting/scaling/padding/clipping in one go
 
   assert(min <= pad_value && pad_value <= max);
