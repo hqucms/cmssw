@@ -327,7 +327,11 @@ def setupBTagging(process, jetSource, pfCandidates, explicitJTA, pvSource, svSou
     runNegativeVertexing = False
     runNegativeCvsLVertexing = False
     for btagInfo in requiredTagInfos:
-        if btagInfo == 'pfInclusiveSecondaryVertexFinderNegativeTagInfos' or btagInfo == 'pfNegativeDeepFlavourTagInfos':
+        if btagInfo in (
+            'pfInclusiveSecondaryVertexFinderNegativeTagInfos',
+            'pfNegativeDeepFlavourTagInfos',
+            'pfNegativeParticleNetAK4TagInfos',
+            ):
             runNegativeVertexing = True
         if btagInfo == 'pfInclusiveSecondaryVertexFinderNegativeCvsLTagInfos':
             runNegativeCvsLVertexing = True
