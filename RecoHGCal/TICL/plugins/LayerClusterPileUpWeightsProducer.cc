@@ -210,8 +210,8 @@ void LayerClusterPileUpWeightsProducer::produce(edm::Event &iEvent, const edm::E
   
   // what should I do with this part?
   if (!tag_infos->empty()) {
-    auto jet_ref = tag_infos->begin()->jet();
-    auto ref2prod = edm::makeRefToBaseProdFrom(jet_ref, iEvent);
+    auto lc_ref = tag_infos->begin()->jet();
+    auto ref2prod = edm::makeRefToBaseProdFrom(lc_ref, iEvent);
     for (std::size_t i = 0; i < output_names_.size(); i++) {
       output_tags.emplace_back(std::make_unique<JetTagCollection>(ref2prod));
     }
