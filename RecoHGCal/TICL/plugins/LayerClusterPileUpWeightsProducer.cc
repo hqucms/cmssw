@@ -29,7 +29,8 @@ Steps:
 #include "FWCore/Utilities/interface/StreamID.h"
 
 // FIXME
-#include "DataFormats/BTauReco/interface/DeepBoostedJetFeatures.h"
+//#include "DataFormats/BTauReco/interface/DeepBoostedJetFeatures.h"
+#include "RecoHGCal/TICL/interface/HGCALPUMakeInputs.h"
 #include "PhysicsTools/ONNXRuntime/interface/ONNXRuntime.h"
 
 #include <iostream>
@@ -78,8 +79,8 @@ public:
   static void globalEndJob(const ONNXRuntime *);
 
 private:
-  typedef std::vector<reco::DeepBoostedJetTagInfo> TagInfoCollection;
-  typedef reco::JetTagCollection JetTagCollection;
+  //  typedef std::vector<reco::DeepBoostedJetTagInfo> TagInfoCollection;
+  //  typedef reco::JetTagCollection JetTagCollection;
 
   void produce(edm::Event &, const edm::EventSetup &) override;
 
@@ -92,7 +93,8 @@ private:
                                      float replace_inf_value = 0,
                                      float min = 0,
                                      float max = -1);
-  void make_inputs(const reco::DeepBoostedJetTagInfo &taginfo);
+  //void make_inputs(const reco::DeepBoostedJetTagInfo &taginfo); // from HQ
+  void make_inputs(const std::unordered_map<std::string, std::vector<float>>  &taginfo);
 
   const edm::EDGetTokenT<TagInfoCollection> src_;
   std::vector<std::string> output_names_;           // names of the output scores
@@ -198,8 +200,15 @@ void LayerClusterPileUpWeightsProducer::produce(edm::Event &iEvent, const edm::E
   edm::Handle<TagInfoCollection> tag_infos;
   iEvent.getByToken(src_, tag_infos);
 
+  // get the unordered map:
+  std::unordered_map<std::string, std::vector<float>> inputs_ = makeFeatureMap(const std::vector<reco::CaloCluster>& layerClusters);
+
   // initialize output collection
-  std::vector<std::unique_ptr<JetTagCollection>> output_tags;
+  //  std::vector<std::unique_ptr<JetTagCollection>> output_tags;
+  std::vector<std::unique_ptr<std::vector<reco::CaloCluster>> output_tags;
+  
+  
+  // what should I do with this part?
   if (!tag_infos->empty()) {
     auto jet_ref = tag_infos->begin()->jet();
     auto ref2prod = edm::makeRefToBaseProdFrom(jet_ref, iEvent);
@@ -212,6 +221,27 @@ void LayerClusterPileUpWeightsProducer::produce(edm::Event &iEvent, const edm::E
     }
   }
 
+
+  for (unsigned lc_n = 0; lc_n < tag_infos->size(); ++lc_n) {
+    const auto &taginfo = (*tag_infos)[lc_n];
+    std::vector<float> outputs(output_names_.size(), 0);  // init as all zeros
+
+    if (!taginfo.features().empty()) {
+      // convert inputs
+      make_inputs(taginfo);
+      // run prediction and get outputs
+      outputs = globalCache()->run(input_names_, data_, input_shapes_)[0];
+      assert(outputs.size() == output_names_.size());
+    }
+
+    const auto &lc_ref = tag_infos->at(lc_n).jet();
+    for (std::size_t flav_n = 0; flav_n < output_names_.size(); flav_n++) {
+      (*(output_tags[flav_n]))[lc_ref] = outputs[flav_n];
+    }
+  }
+
+  /*
+  // from HQ
   for (unsigned jet_n = 0; jet_n < tag_infos->size(); ++jet_n) {
     const auto &taginfo = (*tag_infos)[jet_n];
     std::vector<float> outputs(output_names_.size(), 0);  // init as all zeros
@@ -229,7 +259,7 @@ void LayerClusterPileUpWeightsProducer::produce(edm::Event &iEvent, const edm::E
       (*(output_tags[flav_n]))[jet_ref] = outputs[flav_n];
     }
   }
-
+  */
   if (debug_) {
     std::cout << "=== " << iEvent.id().run() << ":" << iEvent.id().luminosityBlock() << ":" << iEvent.id().event()
               << " ===" << std::endl;
@@ -271,7 +301,8 @@ std::vector<float> LayerClusterPileUpWeightsProducer::center_norm_pad(const std:
   return out;
 }
 
-void LayerClusterPileUpWeightsProducer::make_inputs(const reco::DeepBoostedJetTagInfo &taginfo) {
+//void LayerClusterPileUpWeightsProducer::make_inputs(const reco::DeepBoostedJetTagInfo &taginfo) {
+void LayerClusterPileUpWeightsProducer::make_inputs(std::unordered_map<std::string, std::vector<float>> &taginfo) {
   for (unsigned igroup = 0; igroup < input_names_.size(); ++igroup) {
     const auto &group_name = input_names_[igroup];
     const auto &prep_params = prep_info_map_.at(group_name);
