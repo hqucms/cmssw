@@ -8,6 +8,8 @@
 #include <memory>
 #include <algorithm>
 
+#include <math.h>
+
 #include "DataFormats/CaloRecHit/interface/CaloClusterFwd.h"
 
 
@@ -17,10 +19,7 @@ class HGCALPUMakeInputs {
   HGCALPUMakeInputs();
   ~HGCALPUMakeInputs() override;
  
-  void makeFeatureMap(const std::vector<reco::CaloCluster>& layerClusters);
-
- private:
-  std::unordered_map<std::string, std::vector<float>> feature_map_;
+  std::unordered_map<std::string, std::vector<float>> makeFeatureMap(const std::vector<edm::Ptr<reco::CaloCluster>>& layerClusters);
 
 }
 #endif
