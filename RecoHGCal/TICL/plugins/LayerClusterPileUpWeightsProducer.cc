@@ -96,7 +96,7 @@ private:
   //void make_inputs(const reco::DeepBoostedJetTagInfo &taginfo); // from HQ
   void make_inputs(const std::unordered_map<std::string, std::vector<float>>  &taginfo);
 
-  const edm::EDGetTokenT<TagInfoCollection> src_;
+  const edm::EDGetTokenT<edm::View<reco::CaloCluster>> src_;
   std::vector<std::string> output_names_;           // names of the output scores
   std::vector<std::string> input_names_;            // names of each input group - the ordering is important!
   std::vector<std::vector<int64_t>> input_shapes_;  // shapes of each input group (-1 for dynamic axis)
@@ -109,7 +109,7 @@ private:
 };
 
 LayerClusterPileUpWeightsProducer::LayerClusterPileUpWeightsProducer(const edm::ParameterSet &iConfig, const ONNXRuntime *cache)
-    : src_(consumes<TagInfoCollection>(iConfig.getParameter<edm::InputTag>("src"))),
+  : src_(consumes<edm::View<reco::CaloCluster>>(iConfig.getParameter<edm::InputTag>("src"))),
       output_names_(iConfig.getParameter<std::vector<std::string>>("output_names")),
       debug_(iConfig.getUntrackedParameter<bool>("debugMode", false)) {
   // load preprocessing info
@@ -169,9 +169,10 @@ LayerClusterPileUpWeightsProducer::LayerClusterPileUpWeightsProducer(const edm::
   }
 
   // get output names from output_names
-  for (const auto &flav_name : output_names_) {
-    produces<JetTagCollection>(flav_name);
-  }
+  //for (const auto &flav_name : output_names_) { ;/// for btagging was for each different output score
+  //produces<JetTagCollection>(flav_name); // JetTagCollection -> vector of float
+  produces<std::vector<float>>();
+    // }
 }
 
 LayerClusterPileUpWeightsProducer::~LayerClusterPileUpWeightsProducer() {}
@@ -179,11 +180,11 @@ LayerClusterPileUpWeightsProducer::~LayerClusterPileUpWeightsProducer() {}
 void LayerClusterPileUpWeightsProducer::fillDescriptions(edm::ConfigurationDescriptions &descriptions) {
   // layerClusterPileUpWeightsProducer
   edm::ParameterSetDescription desc;
-  desc.add<edm::InputTag>("src", edm::InputTag("pfDeepBoostedJetTagInfos"));
+  desc.add<edm::InputTag>("src", edm::InputTag("pfDeepBoostedJetTagInfos")); // layer clusters
   desc.add<edm::FileInPath>("preprocess_json",
-                            edm::FileInPath("RecoBTag/Combined/data/DeepBoostedJet/V02/full/resnet.onnx"));
+                            edm::FileInPath("RecoBTag/Combined/data/DeepBoostedJet/V02/full/resnet.onnx")); //preproccesses json
   desc.add<edm::FileInPath>("model_path",
-                            edm::FileInPath("RecoBTag/Combined/data/DeepBoostedJet/V02/full/resnet.onnx"));
+                            edm::FileInPath("RecoBTag/Combined/data/DeepBoostedJet/V02/full/resnet.onnx")); // model 
   desc.add<std::vector<std::string>>("output_names", std::vector<std::string>{"softmax"});
   desc.addOptionalUntracked<bool>("debugMode", false);
 
@@ -197,49 +198,69 @@ std::unique_ptr<ONNXRuntime> LayerClusterPileUpWeightsProducer::initializeGlobal
 void LayerClusterPileUpWeightsProducer::globalEndJob(const ONNXRuntime *cache) {}
 
 void LayerClusterPileUpWeightsProducer::produce(edm::Event &iEvent, const edm::EventSetup &iSetup) {
-  edm::Handle<TagInfoCollection> tag_infos;
+  //edm::Handle<TagInfoCollection> tag_infos; // handle is a pointer to the collection
+  edm::Handle<edm::View<reco::CaloCluster>> tag_infos; // view access the indx of the original collection
   iEvent.getByToken(src_, tag_infos);
 
-  // get the unordered map:
-  std::unordered_map<std::string, std::vector<float>> inputs_ = makeFeatureMap(const std::vector<reco::CaloCluster>& layerClusters);
+  // LG starts here
+  std::vector<float> results(all_lcs.size(), 0);
 
-  // initialize output collection
-  //  std::vector<std::unique_ptr<JetTagCollection>> output_tags;
-  std::vector<std::unique_ptr<std::vector<reco::CaloCluster>> output_tags;
-  
-  
-  // what should I do with this part?
-  if (!tag_infos->empty()) {
-    auto lc_ref = tag_infos->begin()->jet();
-    auto ref2prod = edm::makeRefToBaseProdFrom(lc_ref, iEvent);
-    for (std::size_t i = 0; i < output_names_.size(); i++) {
-      output_tags.emplace_back(std::make_unique<JetTagCollection>(ref2prod));
+  for (float z_sign : {-1, 1}){
+    std::vector<Ptr> lc_ptrs; // only +z or -z
+
+    for (const auto &lc : all_lcs) {
+      if (lc.eta * z_sign > 1) {
+	lc_ptrs.push_back(lc);
+      }
     }
-  } else {
-    for (std::size_t i = 0; i < output_names_.size(); i++) {
-      output_tags.emplace_back(std::make_unique<JetTagCollection>());
-    }
-  }
 
+    auto input_map = makeFeatures(lc_ptrs); // tag_info
 
-  for (unsigned lc_n = 0; lc_n < tag_infos->size(); ++lc_n) {
-    const auto &taginfo = (*tag_infos)[lc_n];
-    std::vector<float> outputs(output_names_.size(), 0);  // init as all zeros
-
-    if (!taginfo.features().empty()) {
+    std::vector<std::unique_ptr<std::vector<reco::CaloCluster>> output_tags;
+    
+    // pre-processing
+    //    if (!taginfo.features().empty()) {
+    if (!input_map.empty()) { 
       // convert inputs
       make_inputs(taginfo);
       // run prediction and get outputs
-      outputs = globalCache()->run(input_names_, data_, input_shapes_)[0];
-      assert(outputs.size() == output_names_.size());
+      output_tags = globalCache()->run(input_names_, data_, input_shapes_)[0];
+      //assert(outputs.size() == output_names_.size());
     }
+
+
+    // lc[i] <==> outputs[i]
+    // .key() gives the index in the original input collection
+    for (unsigned i=0; i<lc_ptrs.size(); ++i) {
+      results[lc_ptrs[i].key()] = outputs[i];
+    }
+
+
+  } // end of looping over the two Hgcal endcaps
+  
+
+  // get the unordered map:
+  // loop over tag_infos and if z>0 
+  //  std::unordered_map<std::string, std::vector<float>> inputs_ = makeFeatureMap(const std::vector<reco::CaloCluster>& layerClusters);
+
+  // initialize output collection
+  //  std::vector<std::unique_ptr<JetTagCollection>> output_tags;
+  //  std::vector<std::unique_ptr<std::vector<reco::CaloCluster>> output_tags;
+  
+
+  /*
+  //  for (unsigned lc_n = 0; lc_n < tag_infos->size(); ++lc_n) {
+    const auto &taginfo = (*tag_infos)[lc_n];
+    std::vector<float> outputs(output_names_.size(), 0);  // init as all zeros
+
+
 
     const auto &lc_ref = tag_infos->at(lc_n).jet();
     for (std::size_t flav_n = 0; flav_n < output_names_.size(); flav_n++) {
       (*(output_tags[flav_n]))[lc_ref] = outputs[flav_n];
     }
-  }
-
+    //  }
+    */
   /*
   // from HQ
   for (unsigned jet_n = 0; jet_n < tag_infos->size(); ++jet_n) {
@@ -260,6 +281,8 @@ void LayerClusterPileUpWeightsProducer::produce(edm::Event &iEvent, const edm::E
     }
   }
   */
+
+
   if (debug_) {
     std::cout << "=== " << iEvent.id().run() << ":" << iEvent.id().luminosityBlock() << ":" << iEvent.id().event()
               << " ===" << std::endl;
@@ -272,7 +295,7 @@ void LayerClusterPileUpWeightsProducer::produce(edm::Event &iEvent, const edm::E
       }
     }
   }
-
+  // LG: We probably do not need the the outpu_names_ right?
   // put into the event
   for (std::size_t flav_n = 0; flav_n < output_names_.size(); ++flav_n) {
     iEvent.put(std::move(output_tags[flav_n]), output_names_[flav_n]);
