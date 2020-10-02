@@ -166,7 +166,7 @@ void LayerClusterPileUpWeightsProducer::fillDescriptions(edm::ConfigurationDescr
   desc.add<std::vector<std::string>>("output_names", std::vector<std::string>{"softmax"});
   desc.addOptionalUntracked<bool>("debugMode", false);
 
-  descriptions.addWithDefaultLabel(desc);
+  descriptions.add("hgcalLayerClusterPileupWeights", desc);
 }
 
 std::unique_ptr<ONNXRuntime> LayerClusterPileUpWeightsProducer::initializeGlobalCache(const edm::ParameterSet &iConfig) {

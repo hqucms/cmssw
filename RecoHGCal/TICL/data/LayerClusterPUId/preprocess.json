@@ -1,0 +1,267 @@
+{
+  "output_names": {
+    "label": "_pad(lc_hits_energy_from_cp/lc_energy>0.5, 80000)",
+    "label_mask": "_pad(lc_mask, 80000)"
+  },
+  "input_names": [
+    "lc_points",
+    "lc_features",
+    "lc_perm_idx",
+    "encode_knnIdx1",
+    "encode_knnIdx2",
+    "encode_knnIdx3",
+    "encode_knnIdx4",
+    "decode_knnIdx1",
+    "decode_knnIdx2",
+    "decode_knnIdx3",
+    "decode_knnIdx4"
+  ],
+  "lc_points": {
+    "var_names": [
+      "lc_abseta",
+      "lc_phi",
+      "lc_absZ"
+    ],
+    "var_infos": {
+      "lc_abseta": {
+        "median": 2.25,
+        "norm_factor": 1,
+        "replace_inf_value": 0,
+        "lower_bound": -5,
+        "upper_bound": 5,
+        "pad": 0
+      },
+      "lc_phi": {
+        "median": 0,
+        "norm_factor": 1,
+        "replace_inf_value": 0,
+        "lower_bound": -5,
+        "upper_bound": 5,
+        "pad": 0
+      },
+      "lc_absZ": {
+        "median": 344,
+        "norm_factor": 0.02,
+        "replace_inf_value": 0,
+        "lower_bound": -5,
+        "upper_bound": 5,
+        "pad": 0
+      }
+    },
+    "var_length": 80000
+  },
+  "lc_features": {
+    "var_names": [
+      "lc_x",
+      "lc_y",
+      "lc_layer",
+      "lc_time",
+      "lc_timeErr",
+      "lc_nrechits",
+      "lc_logE"
+    ],
+    "var_infos": {
+      "lc_x": {
+        "median": 0,
+        "norm_factor": 0.01,
+        "replace_inf_value": 0,
+        "lower_bound": -5,
+        "upper_bound": 5,
+        "pad": 0
+      },
+      "lc_y": {
+        "median": 0,
+        "norm_factor": 0.01,
+        "replace_inf_value": 0,
+        "lower_bound": -5,
+        "upper_bound": 5,
+        "pad": 0
+      },
+      "lc_layer": {
+        "median": 12,
+        "norm_factor": 0.07,
+        "replace_inf_value": 0,
+        "lower_bound": -5,
+        "upper_bound": 5,
+        "pad": 0
+      },
+      "lc_time": {
+        "median": 0,
+        "norm_factor": 1,
+        "replace_inf_value": 0,
+        "lower_bound": -1e+32,
+        "upper_bound": 1e+32,
+        "pad": 0
+      },
+      "lc_timeErr": {
+        "median": 0,
+        "norm_factor": 1,
+        "replace_inf_value": 0,
+        "lower_bound": -1e+32,
+        "upper_bound": 1e+32,
+        "pad": 0
+      },
+      "lc_nrechits": {
+        "median": 2,
+        "norm_factor": 0.3,
+        "replace_inf_value": 0,
+        "lower_bound": -5,
+        "upper_bound": 5,
+        "pad": 0
+      },
+      "lc_logE": {
+        "median": -2.6,
+        "norm_factor": 0.7,
+        "replace_inf_value": 0,
+        "lower_bound": -5,
+        "upper_bound": 5,
+        "pad": 0
+      }
+    },
+    "var_length": 80000
+  },
+  "lc_perm_idx": {
+    "var_names": [
+      "lc_perm_idx"
+    ],
+    "var_infos": {
+      "lc_perm_idx": {
+        "median": 0,
+        "norm_factor": 1,
+        "replace_inf_value": 0,
+        "lower_bound": -1e+32,
+        "upper_bound": 1e+32,
+        "pad": 0
+      }
+    },
+    "var_length": null
+  },
+  "encode_knnIdx1": {
+    "var_names": [
+      "encode_knnIdx1"
+    ],
+    "var_infos": {
+      "encode_knnIdx1": {
+        "median": 0,
+        "norm_factor": 1,
+        "replace_inf_value": 0,
+        "lower_bound": -1e+32,
+        "upper_bound": 1e+32,
+        "pad": 0
+      }
+    },
+    "var_length": null
+  },
+  "encode_knnIdx2": {
+    "var_names": [
+      "encode_knnIdx2"
+    ],
+    "var_infos": {
+      "encode_knnIdx2": {
+        "median": 0,
+        "norm_factor": 1,
+        "replace_inf_value": 0,
+        "lower_bound": -1e+32,
+        "upper_bound": 1e+32,
+        "pad": 0
+      }
+    },
+    "var_length": null
+  },
+  "encode_knnIdx3": {
+    "var_names": [
+      "encode_knnIdx3"
+    ],
+    "var_infos": {
+      "encode_knnIdx3": {
+        "median": 0,
+        "norm_factor": 1,
+        "replace_inf_value": 0,
+        "lower_bound": -1e+32,
+        "upper_bound": 1e+32,
+        "pad": 0
+      }
+    },
+    "var_length": null
+  },
+  "encode_knnIdx4": {
+    "var_names": [
+      "encode_knnIdx4"
+    ],
+    "var_infos": {
+      "encode_knnIdx4": {
+        "median": 0,
+        "norm_factor": 1,
+        "replace_inf_value": 0,
+        "lower_bound": -1e+32,
+        "upper_bound": 1e+32,
+        "pad": 0
+      }
+    },
+    "var_length": null
+  },
+  "decode_knnIdx1": {
+    "var_names": [
+      "decode_knnIdx1"
+    ],
+    "var_infos": {
+      "decode_knnIdx1": {
+        "median": 0,
+        "norm_factor": 1,
+        "replace_inf_value": 0,
+        "lower_bound": -1e+32,
+        "upper_bound": 1e+32,
+        "pad": 0
+      }
+    },
+    "var_length": null
+  },
+  "decode_knnIdx2": {
+    "var_names": [
+      "decode_knnIdx2"
+    ],
+    "var_infos": {
+      "decode_knnIdx2": {
+        "median": 0,
+        "norm_factor": 1,
+        "replace_inf_value": 0,
+        "lower_bound": -1e+32,
+        "upper_bound": 1e+32,
+        "pad": 0
+      }
+    },
+    "var_length": null
+  },
+  "decode_knnIdx3": {
+    "var_names": [
+      "decode_knnIdx3"
+    ],
+    "var_infos": {
+      "decode_knnIdx3": {
+        "median": 0,
+        "norm_factor": 1,
+        "replace_inf_value": 0,
+        "lower_bound": -1e+32,
+        "upper_bound": 1e+32,
+        "pad": 0
+      }
+    },
+    "var_length": null
+  },
+  "decode_knnIdx4": {
+    "var_names": [
+      "decode_knnIdx4"
+    ],
+    "var_infos": {
+      "decode_knnIdx4": {
+        "median": 0,
+        "norm_factor": 1,
+        "replace_inf_value": 0,
+        "lower_bound": -1e+32,
+        "upper_bound": 1e+32,
+        "pad": 0
+      }
+    },
+    "var_length": null
+  }
+}
