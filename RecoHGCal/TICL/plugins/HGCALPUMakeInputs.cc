@@ -13,7 +13,8 @@ using PointCloud = cms::nanoflann::PointCloud<float>;
 std::unordered_map<std::string, std::vector<float>> HGCALPUMakeInputs::makeFeatureMap(
     const std::vector<reco::CaloClusterPtr>& layerClusters,
     const edm::ValueMap<std::pair<float, float>>& layerClusterTime,
-    const hgcal::RecHitTools& recHitTools) {
+    const hgcal::RecHitTools& recHitTools,
+    bool debug) {
   PointCloud::Points points;
   std::unordered_map<std::string, std::vector<float>> fts;
 
@@ -48,9 +49,12 @@ std::unordered_map<std::string, std::vector<float>> HGCALPUMakeInputs::makeFeatu
     std::vector<float> output(max_query_size * num_neighbors, max_support_size - 1);
     std::copy(result.begin(), result.begin() + std::min(result.size(), output.size()), output.begin());
 
-    std::cout << "[knn] k=" << num_neighbors << ", num_points=" << points.size()
-              << ", max_support_size=" << max_support_size << ", max_query_size=" << max_query_size
-              << ", knn_result_size=" << result.size() << ", final_output_size=" << output.size() << std::endl;
+    if (debug) {
+      std::cout << "[knn] k=" << num_neighbors << ", num_points=" << points.size()
+                << ", max_support_size=" << max_support_size << ", max_query_size=" << max_query_size
+                << ", knn_result_size=" << result.size() << ", final_output_size=" << output.size() << std::endl;
+    }
+
     return output;
   };
 

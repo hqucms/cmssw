@@ -21,7 +21,8 @@ namespace ticl {
     static std::unordered_map<std::string, std::vector<float>> makeFeatureMap(
         const std::vector<reco::CaloClusterPtr>& layerClusters,
         const edm::ValueMap<std::pair<float, float>>& layerClusterTime,
-        const hgcal::RecHitTools& recHitTools);
+        const hgcal::RecHitTools& recHitTools,
+        bool debug = false);
 
     constexpr static unsigned max_num_layer_clusters = 80000;
   };

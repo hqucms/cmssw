@@ -204,7 +204,7 @@ void LayerClusterPileUpWeightsProducer::produce(edm::Event &iEvent, const edm::E
       return a->energy() > b->energy();
     });  // sort by LC energy
 
-    auto features = HGCALPUMakeInputs::makeFeatureMap(lc_ptrs, layerClusterTimeMap, recHitTools_);
+    auto features = HGCALPUMakeInputs::makeFeatureMap(lc_ptrs, layerClusterTimeMap, recHitTools_, debug_);
 
     // pre-processing
     make_inputs(features);
