@@ -10,6 +10,8 @@
 <use name="DataFormats/TrackReco"/>
 <use name="TrackingTools/Records"/>
 <use name="PhysicsTools/TensorFlow"/>
+<use name="PhysicsTools/NearestNeighbors"/>
+<use name="PhysicsTools/ONNXRuntime"/>
 <use name="RecoHGCal/TICL"/>
 <library file="*.cc" name="RecoHGCalTICLPlugins">
   <flags EDM_PLUGIN="1"/>
