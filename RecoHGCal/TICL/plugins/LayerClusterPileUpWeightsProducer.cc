@@ -1,25 +1,3 @@
-/*
-Inputs: 
- - layerClusters
- - timing & error map
-
-Output:
- - std::vector<float> : weight for each LayerCluster
-
-Steps:
- - make_inputs:
-   - all LCs -> LCs +z, LCs -z
-   - make_inputs_endcap(vector<LC*>)
-     - sorted by energy
-     - feature arrays 
-       - obj -> array
-       - center_norm_pad
-     - coordinates array 
-       - obj -> array
-       - kNN
-   - predict()
-*/
-
 #include "FWCore/Framework/interface/Event.h"
 #include "FWCore/Framework/interface/Frameworkfwd.h"
 #include "FWCore/Framework/interface/MakerMacros.h"
@@ -28,18 +6,18 @@ Steps:
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
 #include "FWCore/Utilities/interface/StreamID.h"
 
-// FIXME
-//#include "DataFormats/BTauReco/interface/DeepBoostedJetFeatures.h"
-#include "RecoHGCal/TICL/interface/HGCALPUMakeInputs.h"
+#include "HGCALPUMakeInputs.h"
 #include "PhysicsTools/ONNXRuntime/interface/ONNXRuntime.h"
 
 #include <iostream>
 #include <fstream>
 #include <algorithm>
 #include <numeric>
+#include <memory>
 #include <nlohmann/json.hpp>
 
 using namespace cms::Ort;
+using namespace ticl;
 
 // struct to hold preprocessing parameters
 struct PreprocessParams {
@@ -79,9 +57,6 @@ public:
   static void globalEndJob(const ONNXRuntime *);
 
 private:
-  //  typedef std::vector<reco::DeepBoostedJetTagInfo> TagInfoCollection;
-  //  typedef reco::JetTagCollection JetTagCollection;
-
   void produce(edm::Event &, const edm::EventSetup &) override;
 
   std::vector<float> center_norm_pad(const std::vector<float> &input,
@@ -93,10 +68,12 @@ private:
                                      float replace_inf_value = 0,
                                      float min = 0,
                                      float max = -1);
-  //void make_inputs(const reco::DeepBoostedJetTagInfo &taginfo); // from HQ
-  void make_inputs(const std::unordered_map<std::string, std::vector<float>>  &taginfo);
+  void make_inputs(const std::unordered_map<std::string, std::vector<float>> &taginfo);
 
-  const edm::EDGetTokenT<edm::View<reco::CaloCluster>> src_;
+  edm::EDGetTokenT<reco::CaloClusterView> layerClustersToken_;
+  edm::EDGetTokenT<edm::ValueMap<std::pair<float, float>>> layerClusterTimeToken_;
+  hgcal::RecHitTools recHitTools_;
+
   std::vector<std::string> output_names_;           // names of the output scores
   std::vector<std::string> input_names_;            // names of each input group - the ordering is important!
   std::vector<std::vector<int64_t>> input_shapes_;  // shapes of each input group (-1 for dynamic axis)
@@ -108,8 +85,11 @@ private:
   bool debug_ = false;
 };
 
-LayerClusterPileUpWeightsProducer::LayerClusterPileUpWeightsProducer(const edm::ParameterSet &iConfig, const ONNXRuntime *cache)
-  : src_(consumes<edm::View<reco::CaloCluster>>(iConfig.getParameter<edm::InputTag>("src"))),
+LayerClusterPileUpWeightsProducer::LayerClusterPileUpWeightsProducer(const edm::ParameterSet &iConfig,
+                                                                     const ONNXRuntime *cache)
+    : layerClustersToken_(consumes<reco::CaloClusterView>(iConfig.getParameter<edm::InputTag>("layerClusters"))),
+      layerClusterTimeToken_(
+          consumes<edm::ValueMap<std::pair<float, float>>>(iConfig.getParameter<edm::InputTag>("layerClusterTime"))),
       output_names_(iConfig.getParameter<std::vector<std::string>>("output_names")),
       debug_(iConfig.getUntrackedParameter<bool>("debugMode", false)) {
   // load preprocessing info
@@ -168,11 +148,7 @@ LayerClusterPileUpWeightsProducer::LayerClusterPileUpWeightsProducer(const edm::
     std::cout << "\n";
   }
 
-  // get output names from output_names
-  //for (const auto &flav_name : output_names_) { ;/// for btagging was for each different output score
-  //produces<JetTagCollection>(flav_name); // JetTagCollection -> vector of float
   produces<std::vector<float>>();
-    // }
 }
 
 LayerClusterPileUpWeightsProducer::~LayerClusterPileUpWeightsProducer() {}
@@ -180,11 +156,13 @@ LayerClusterPileUpWeightsProducer::~LayerClusterPileUpWeightsProducer() {}
 void LayerClusterPileUpWeightsProducer::fillDescriptions(edm::ConfigurationDescriptions &descriptions) {
   // layerClusterPileUpWeightsProducer
   edm::ParameterSetDescription desc;
-  desc.add<edm::InputTag>("src", edm::InputTag("pfDeepBoostedJetTagInfos")); // layer clusters
-  desc.add<edm::FileInPath>("preprocess_json",
-                            edm::FileInPath("RecoBTag/Combined/data/DeepBoostedJet/V02/full/resnet.onnx")); //preproccesses json
+  desc.add<edm::InputTag>("layerClusters", edm::InputTag("hgcalLayerClusters", "", "RECO"));
+  desc.add<edm::InputTag>("layerClusterTime", edm::InputTag("hgcalLayerClusters", "timeLayerCluster", "RECO"));
+  desc.add<edm::FileInPath>(
+      "preprocess_json",
+      edm::FileInPath("RecoHGCal/TICL/data/LayerClusterPUId/preprocess.json"));  //preproccesses json
   desc.add<edm::FileInPath>("model_path",
-                            edm::FileInPath("RecoBTag/Combined/data/DeepBoostedJet/V02/full/resnet.onnx")); // model 
+                            edm::FileInPath("RecoHGCal/TICL/data/LayerClusterPUId/RandLANet.onnx"));  // model
   desc.add<std::vector<std::string>>("output_names", std::vector<std::string>{"softmax"});
   desc.addOptionalUntracked<bool>("debugMode", false);
 
@@ -198,119 +176,65 @@ std::unique_ptr<ONNXRuntime> LayerClusterPileUpWeightsProducer::initializeGlobal
 void LayerClusterPileUpWeightsProducer::globalEndJob(const ONNXRuntime *cache) {}
 
 void LayerClusterPileUpWeightsProducer::produce(edm::Event &iEvent, const edm::EventSetup &iSetup) {
-  //edm::Handle<TagInfoCollection> tag_infos; // handle is a pointer to the collection
-  edm::Handle<edm::View<reco::CaloCluster>> tag_infos; // view access the indx of the original collection
-  iEvent.getByToken(src_, tag_infos);
+  const auto &layerClusters = iEvent.get(layerClustersToken_);
+  const auto &layerClusterTimeMap = iEvent.get(layerClusterTimeToken_);
 
-  // LG starts here
-  std::vector<float> results(all_lcs.size(), 0);
+  edm::ESHandle<CaloGeometry> geom;
+  iSetup.get<CaloGeometryRecord>().get(geom);
+  recHitTools_.setGeometry(*geom);
 
-  for (float z_sign : {-1, 1}){
-    std::vector<Ptr> lc_ptrs; // only +z or -z
+  auto results = std::make_unique<std::vector<float>>(layerClusters.size(), 0);
 
-    for (const auto &lc : all_lcs) {
-      if (lc.eta * z_sign > 1) {
-	lc_ptrs.push_back(lc);
+  for (float z_sign : {-1, 1}) {
+    // do one endcap at a time
+    std::vector<reco::CaloClusterPtr> lc_ptrs;
+    for (const auto &lc : layerClusters.ptrs()) {
+      if (lc->eta() * z_sign > 1) {
+        lc_ptrs.push_back(lc);
       }
     }
+    std::sort(lc_ptrs.begin(), lc_ptrs.end(), [&](const reco::CaloClusterPtr &a, const reco::CaloClusterPtr &b) {
+      return a->energy() > b->energy();
+    });  // sort by LC energy
 
-    auto input_map = makeFeatures(lc_ptrs); // tag_info
+    auto features = HGCALPUMakeInputs::makeFeatureMap(lc_ptrs, layerClusterTimeMap, recHitTools_);
 
-    std::vector<std::unique_ptr<std::vector<reco::CaloCluster>> output_tags;
-    
     // pre-processing
-    //    if (!taginfo.features().empty()) {
-    if (!input_map.empty()) { 
-      // convert inputs
-      make_inputs(taginfo);
-      // run prediction and get outputs
-      output_tags = globalCache()->run(input_names_, data_, input_shapes_)[0];
-      //assert(outputs.size() == output_names_.size());
-    }
+    make_inputs(features);
 
+    // run prediction and get outputs
+    auto outputs = globalCache()->run(input_names_, data_, input_shapes_)[0];
 
     // lc[i] <==> outputs[i]
     // .key() gives the index in the original input collection
-    for (unsigned i=0; i<lc_ptrs.size(); ++i) {
-      results[lc_ptrs[i].key()] = outputs[i];
+    for (unsigned i = 0; i < std::min(lc_ptrs.size(), outputs.size()); ++i) {
+      (*results)[lc_ptrs[i].key()] = outputs[i];
     }
 
-
-  } // end of looping over the two Hgcal endcaps
-  
-
-  // get the unordered map:
-  // loop over tag_infos and if z>0 
-  //  std::unordered_map<std::string, std::vector<float>> inputs_ = makeFeatureMap(const std::vector<reco::CaloCluster>& layerClusters);
-
-  // initialize output collection
-  //  std::vector<std::unique_ptr<JetTagCollection>> output_tags;
-  //  std::vector<std::unique_ptr<std::vector<reco::CaloCluster>> output_tags;
-  
-
-  /*
-  //  for (unsigned lc_n = 0; lc_n < tag_infos->size(); ++lc_n) {
-    const auto &taginfo = (*tag_infos)[lc_n];
-    std::vector<float> outputs(output_names_.size(), 0);  // init as all zeros
-
-
-
-    const auto &lc_ref = tag_infos->at(lc_n).jet();
-    for (std::size_t flav_n = 0; flav_n < output_names_.size(); flav_n++) {
-      (*(output_tags[flav_n]))[lc_ref] = outputs[flav_n];
-    }
-    //  }
-    */
-  /*
-  // from HQ
-  for (unsigned jet_n = 0; jet_n < tag_infos->size(); ++jet_n) {
-    const auto &taginfo = (*tag_infos)[jet_n];
-    std::vector<float> outputs(output_names_.size(), 0);  // init as all zeros
-
-    if (!taginfo.features().empty()) {
-      // convert inputs
-      make_inputs(taginfo);
-      // run prediction and get outputs
-      outputs = globalCache()->run(input_names_, data_, input_shapes_)[0];
-      assert(outputs.size() == output_names_.size());
-    }
-
-    const auto &jet_ref = tag_infos->at(jet_n).jet();
-    for (std::size_t flav_n = 0; flav_n < output_names_.size(); flav_n++) {
-      (*(output_tags[flav_n]))[jet_ref] = outputs[flav_n];
-    }
-  }
-  */
-
+  }  // end of looping over the two Hgcal endcaps
 
   if (debug_) {
     std::cout << "=== " << iEvent.id().run() << ":" << iEvent.id().luminosityBlock() << ":" << iEvent.id().event()
               << " ===" << std::endl;
-    for (unsigned jet_n = 0; jet_n < tag_infos->size(); ++jet_n) {
-      const auto &jet_ref = tag_infos->at(jet_n).jet();
-      std::cout << " - Jet #" << jet_n << ", pt=" << jet_ref->pt() << ", eta=" << jet_ref->eta()
-                << ", phi=" << jet_ref->phi() << std::endl;
-      for (std::size_t flav_n = 0; flav_n < output_names_.size(); ++flav_n) {
-        std::cout << "    " << output_names_.at(flav_n) << " = " << (*(output_tags.at(flav_n)))[jet_ref] << std::endl;
-      }
+    for (unsigned idx = 0; idx < layerClusters.size(); ++idx) {
+      const auto &lc = layerClusters[idx];
+      std::cout << " - LC #" << idx << ", x=" << lc.x() << ", y=" << lc.y() << ", z=" << lc.z()
+                << ", output=" << (*results)[idx] << std::endl;
     }
   }
-  // LG: We probably do not need the the outpu_names_ right?
-  // put into the event
-  for (std::size_t flav_n = 0; flav_n < output_names_.size(); ++flav_n) {
-    iEvent.put(std::move(output_tags[flav_n]), output_names_[flav_n]);
-  }
+
+  iEvent.put(std::move(results));
 }
 
 std::vector<float> LayerClusterPileUpWeightsProducer::center_norm_pad(const std::vector<float> &input,
-                                                                  float center,
-                                                                  float norm_factor,
-                                                                  unsigned min_length,
-                                                                  unsigned max_length,
-                                                                  float pad_value,
-                                                                  float replace_inf_value,
-                                                                  float min,
-                                                                  float max) {
+                                                                      float center,
+                                                                      float norm_factor,
+                                                                      unsigned min_length,
+                                                                      unsigned max_length,
+                                                                      float pad_value,
+                                                                      float replace_inf_value,
+                                                                      float min,
+                                                                      float max) {
   // do variable shifting/scaling/padding/clipping in one go
 
   assert(min <= pad_value && pad_value <= max);
@@ -319,13 +243,23 @@ std::vector<float> LayerClusterPileUpWeightsProducer::center_norm_pad(const std:
   unsigned target_length = std::clamp((unsigned)input.size(), min_length, max_length);
   std::vector<float> out(target_length, pad_value);
   for (unsigned i = 0; i < input.size() && i < target_length; ++i) {
-    out[i] = std::clamp((catch_infs(input[i], replace_inf_value) - center) * norm_factor, min, max);
+    auto val = std::isfinite(input[i]) ? input[i] : replace_inf_value;
+    out[i] = std::clamp((val - center) * norm_factor, min, max);
   }
   return out;
 }
 
-//void LayerClusterPileUpWeightsProducer::make_inputs(const reco::DeepBoostedJetTagInfo &taginfo) {
-void LayerClusterPileUpWeightsProducer::make_inputs(std::unordered_map<std::string, std::vector<float>> &taginfo) {
+void LayerClusterPileUpWeightsProducer::make_inputs(
+    const std::unordered_map<std::string, std::vector<float>> &features) {
+  auto get = [&features](const std::string &name) {
+    auto item = features.find(name);
+    if (item != features.end()) {
+      return item->second;
+    } else {
+      throw cms::Exception("InvalidArgument") << "Feature " << name << " does not exist!";
+    }
+  };
+
   for (unsigned igroup = 0; igroup < input_names_.size(); ++igroup) {
     const auto &group_name = input_names_[igroup];
     const auto &prep_params = prep_info_map_.at(group_name);
@@ -337,7 +271,7 @@ void LayerClusterPileUpWeightsProducer::make_inputs(std::unordered_map<std::stri
     // transform/pad
     for (unsigned i = 0; i < prep_params.var_names.size(); ++i) {
       const auto &varname = prep_params.var_names[i];
-      const auto &raw_value = taginfo.features().get(varname);
+      const auto &raw_value = get(varname);
       const auto &info = prep_params.info(varname);
       auto val = center_norm_pad(raw_value,
                                  info.center,

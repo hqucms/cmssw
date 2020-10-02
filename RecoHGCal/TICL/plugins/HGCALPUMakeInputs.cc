@@ -11,9 +11,9 @@ using namespace ticl;
 using PointCloud = cms::nanoflann::PointCloud<float>;
 
 std::unordered_map<std::string, std::vector<float>> HGCALPUMakeInputs::makeFeatureMap(
-    const std::vector<edm::Ptr<reco::CaloCluster>>& layerClusters,
+    const std::vector<reco::CaloClusterPtr>& layerClusters,
     const edm::ValueMap<std::pair<float, float>>& layerClusterTime,
-    const std::shared_ptr<hgcal::RecHitTools> recHitTools) {
+    const hgcal::RecHitTools& recHitTools) {
   PointCloud::Points points;
   std::unordered_map<std::string, std::vector<float>> fts;
 
@@ -34,7 +34,7 @@ std::unordered_map<std::string, std::vector<float>> HGCALPUMakeInputs::makeFeatu
     fts["lc_timeErr"].push_back(std::max(lc_time.second, 0.f));
     fts["lc_nrechits"].push_back(lc.size());
     fts["lc_logE"].push_back(std::log(lc.energy()));
-    fts["lc_layer"].push_back(recHitTools->getLayerWithOffset(lc.hitsAndFractions().at(0).first));
+    fts["lc_layer"].push_back(recHitTools.getLayerWithOffset(lc.hitsAndFractions().at(0).first));
   }
 
   // indices to sort the lc in decreasing energy

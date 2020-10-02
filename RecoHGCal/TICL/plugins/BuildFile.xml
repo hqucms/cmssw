@@ -12,6 +12,7 @@
 <use name="PhysicsTools/TensorFlow"/>
 <use name="PhysicsTools/NearestNeighbors"/>
 <use name="PhysicsTools/ONNXRuntime"/>
+<use name="json"/>
 <use name="RecoHGCal/TICL"/>
 <library file="*.cc" name="RecoHGCalTICLPlugins">
   <flags EDM_PLUGIN="1"/>

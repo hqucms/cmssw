@@ -6,8 +6,9 @@
 #include <unordered_map>
 
 #include "DataFormats/Common/interface/Ptr.h"
+#include "DataFormats/Common/interface/View.h"
 #include "DataFormats/Common/interface/ValueMap.h"
-#include "DataFormats/CaloRecHit/interface/CaloCluster.h"
+#include "DataFormats/CaloRecHit/interface/CaloClusterFwd.h"
 #include "RecoLocalCalo/HGCalRecAlgos/interface/RecHitTools.h"
 
 namespace ticl {
@@ -17,10 +18,10 @@ namespace ticl {
     HGCALPUMakeInputs() {}
     ~HGCALPUMakeInputs() {}
 
-    std::unordered_map<std::string, std::vector<float>> makeFeatureMap(
-        const std::vector<edm::Ptr<reco::CaloCluster>>& layerClusters,
+    static std::unordered_map<std::string, std::vector<float>> makeFeatureMap(
+        const std::vector<reco::CaloClusterPtr>& layerClusters,
         const edm::ValueMap<std::pair<float, float>>& layerClusterTime,
-        const std::shared_ptr<hgcal::RecHitTools> recHitTools);
+        const hgcal::RecHitTools& recHitTools);
 
     constexpr static unsigned max_num_layer_clusters = 80000;
   };
