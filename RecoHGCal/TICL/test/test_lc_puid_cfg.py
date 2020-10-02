@@ -4,6 +4,13 @@ from FWCore.ParameterSet.VarParsing import VarParsing
 options = VarParsing('analysis')
 options.inputFiles = '/store/mc/Phase2HLTTDRSummer20ReRECOMiniAOD/SinglePhoton_PT2to200/FEVT/PU200_111X_mcRun4_realistic_T15_v1_ext2-v1/250000/FFE433A9-4EA7-A14C-9D9B-ACB9D1E9097F.root'
 options.maxEvents = 10
+
+options.register('eventsToProcess',
+                 '',
+                 VarParsing.multiplicity.list,
+                 VarParsing.varType.string,
+                 "Events to process")
+
 options.parseArguments()
 
 from Configuration.Eras.Era_Phase2C9_cff import Phase2C9
@@ -28,6 +35,9 @@ process.options = cms.untracked.PSet( wantSummary = cms.untracked.bool(True) )
 process.source = cms.Source("PoolSource",
     fileNames=cms.untracked.vstring(options.inputFiles)
 )
+if options.eventsToProcess:
+    process.source.eventsToProcess = cms.untracked.VEventRange(options.eventsToProcess)
+
 ## Maximal Number of Events
 process.maxEvents = cms.untracked.PSet(input=cms.untracked.int32(options.maxEvents))
 

@@ -210,14 +210,15 @@ void LayerClusterPileUpWeightsProducer::produce(edm::Event &iEvent, const edm::E
     make_inputs(features);
 
     // run prediction and get outputs
-    // length is actually *2 because of the use of softmax
+    // outputs is of shape (2, len) with the first `len` elements being the pu prob
     auto outputs = globalCache()->run(input_names_, data_, input_shapes_)[0];
 
     // lc[i] <==> outputs[i]
     // .key() gives the index in the original input collection
     for (unsigned i = 0; i < std::min(lc_ptrs.size(), outputs.size() / 2); ++i) {
-      (*weights)[lc_ptrs[i].key()] = outputs[2 * i + 1];
-      (*results)[lc_ptrs[i].key()] = outputs[2 * i + 1] > threshold_;
+      auto wgt = 1 - outputs[i];  // hard scattering prob = 1 - prob_pu
+      (*weights)[lc_ptrs[i].key()] = wgt;
+      (*results)[lc_ptrs[i].key()] = wgt > threshold_;
     }
 
   }  // end of looping over the two Hgcal endcaps
