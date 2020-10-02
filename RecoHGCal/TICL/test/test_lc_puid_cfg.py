@@ -2,7 +2,7 @@ import FWCore.ParameterSet.Config as cms
 
 from FWCore.ParameterSet.VarParsing import VarParsing
 options = VarParsing('analysis')
-options.inputFiles = ''
+options.inputFiles = '/store/mc/Phase2HLTTDRSummer20ReRECOMiniAOD/SinglePhoton_PT2to200/FEVT/PU200_111X_mcRun4_realistic_T15_v1_ext2-v1/250000/FFE433A9-4EA7-A14C-9D9B-ACB9D1E9097F.root'
 options.maxEvents = 10
 options.parseArguments()
 
@@ -31,7 +31,7 @@ process.source = cms.Source("PoolSource",
 ## Maximal Number of Events
 process.maxEvents = cms.untracked.PSet(input=cms.untracked.int32(options.maxEvents))
 
-process.load('RecoHGCal.TICL.layerClusterPileUpWeightsProducer_cfi')
+process.load('RecoHGCal.TICL.hgcalLayerClusterPileupWeights_cfi')
 process.hgcalLayerClusterPileupWeights.debugMode = True
 process.p = cms.Path(process.hgcalLayerClusterPileupWeights)
 

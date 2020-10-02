@@ -6,7 +6,6 @@
   "input_names": [
     "lc_points",
     "lc_features",
-    "lc_perm_idx",
     "encode_knnIdx1",
     "encode_knnIdx2",
     "encode_knnIdx3",
@@ -120,22 +119,6 @@
     },
     "var_length": 80000
   },
-  "lc_perm_idx": {
-    "var_names": [
-      "lc_perm_idx"
-    ],
-    "var_infos": {
-      "lc_perm_idx": {
-        "median": 0,
-        "norm_factor": 1,
-        "replace_inf_value": 0,
-        "lower_bound": -1e+32,
-        "upper_bound": 1e+32,
-        "pad": 0
-      }
-    },
-    "var_length": null
-  },
   "encode_knnIdx1": {
     "var_names": [
       "encode_knnIdx1"
@@ -150,7 +133,7 @@
         "pad": 0
       }
     },
-    "var_length": null
+    "var_length": 1280000
   },
   "encode_knnIdx2": {
     "var_names": [
@@ -166,7 +149,7 @@
         "pad": 0
       }
     },
-    "var_length": null
+    "var_length": 320000
   },
   "encode_knnIdx3": {
     "var_names": [
@@ -182,7 +165,7 @@
         "pad": 0
       }
     },
-    "var_length": null
+    "var_length": 80000
   },
   "encode_knnIdx4": {
     "var_names": [
@@ -198,7 +181,7 @@
         "pad": 0
       }
     },
-    "var_length": null
+    "var_length": 20000
   },
   "decode_knnIdx1": {
     "var_names": [
@@ -214,7 +197,7 @@
         "pad": 0
       }
     },
-    "var_length": null
+    "var_length": 1250
   },
   "decode_knnIdx2": {
     "var_names": [
@@ -230,7 +213,7 @@
         "pad": 0
       }
     },
-    "var_length": null
+    "var_length": 5000
   },
   "decode_knnIdx3": {
     "var_names": [
@@ -246,7 +229,7 @@
         "pad": 0
       }
     },
-    "var_length": null
+    "var_length": 20000
   },
   "decode_knnIdx4": {
     "var_names": [
@@ -262,6 +245,6 @@
         "pad": 0
       }
     },
-    "var_length": null
+    "var_length": 80000
   }
 }

@@ -9,6 +9,7 @@
 #include "HGCALPUMakeInputs.h"
 #include "PhysicsTools/ONNXRuntime/interface/ONNXRuntime.h"
 
+#include <limits>
 #include <iostream>
 #include <fstream>
 #include <algorithm>
@@ -80,6 +81,8 @@ private:
   std::vector<unsigned> input_sizes_;               // total length of each input vector
   std::unordered_map<std::string, PreprocessParams> prep_info_map_;  // preprocessing info for each input group
 
+  const double threshold_;
+
   FloatArrays data_;
 
   bool debug_ = false;
@@ -91,6 +94,7 @@ LayerClusterPileUpWeightsProducer::LayerClusterPileUpWeightsProducer(const edm::
       layerClusterTimeToken_(
           consumes<edm::ValueMap<std::pair<float, float>>>(iConfig.getParameter<edm::InputTag>("layerClusterTime"))),
       output_names_(iConfig.getParameter<std::vector<std::string>>("output_names")),
+      threshold_(iConfig.getParameter<double>("threshold")),
       debug_(iConfig.getUntrackedParameter<bool>("debugMode", false)) {
   // load preprocessing info
   std::ifstream ifs(iConfig.getParameter<edm::FileInPath>("preprocess_json").fullPath());
@@ -149,6 +153,7 @@ LayerClusterPileUpWeightsProducer::LayerClusterPileUpWeightsProducer(const edm::
   }
 
   produces<std::vector<float>>();
+  produces<std::vector<float>>("weights");
 }
 
 LayerClusterPileUpWeightsProducer::~LayerClusterPileUpWeightsProducer() {}
@@ -164,6 +169,7 @@ void LayerClusterPileUpWeightsProducer::fillDescriptions(edm::ConfigurationDescr
   desc.add<edm::FileInPath>("model_path",
                             edm::FileInPath("RecoHGCal/TICL/data/LayerClusterPUId/RandLANet.onnx"));  // model
   desc.add<std::vector<std::string>>("output_names", std::vector<std::string>{"softmax"});
+  desc.add<double>("threshold", 0.3);
   desc.addOptionalUntracked<bool>("debugMode", false);
 
   descriptions.add("hgcalLayerClusterPileupWeights", desc);
@@ -183,6 +189,7 @@ void LayerClusterPileUpWeightsProducer::produce(edm::Event &iEvent, const edm::E
   iSetup.get<CaloGeometryRecord>().get(geom);
   recHitTools_.setGeometry(*geom);
 
+  auto weights = std::make_unique<std::vector<float>>(layerClusters.size(), 0);
   auto results = std::make_unique<std::vector<float>>(layerClusters.size(), 0);
 
   for (float z_sign : {-1, 1}) {
@@ -203,12 +210,14 @@ void LayerClusterPileUpWeightsProducer::produce(edm::Event &iEvent, const edm::E
     make_inputs(features);
 
     // run prediction and get outputs
+    // length is actually *2 because of the use of softmax
     auto outputs = globalCache()->run(input_names_, data_, input_shapes_)[0];
 
     // lc[i] <==> outputs[i]
     // .key() gives the index in the original input collection
-    for (unsigned i = 0; i < std::min(lc_ptrs.size(), outputs.size()); ++i) {
-      (*results)[lc_ptrs[i].key()] = outputs[i];
+    for (unsigned i = 0; i < std::min(lc_ptrs.size(), outputs.size() / 2); ++i) {
+      (*weights)[lc_ptrs[i].key()] = outputs[2 * i + 1];
+      (*results)[lc_ptrs[i].key()] = outputs[2 * i + 1] > threshold_;
     }
 
   }  // end of looping over the two Hgcal endcaps
@@ -216,14 +225,16 @@ void LayerClusterPileUpWeightsProducer::produce(edm::Event &iEvent, const edm::E
   if (debug_) {
     std::cout << "=== " << iEvent.id().run() << ":" << iEvent.id().luminosityBlock() << ":" << iEvent.id().event()
               << " ===" << std::endl;
-    for (unsigned idx = 0; idx < layerClusters.size(); ++idx) {
+    for (unsigned idx = 0; idx < layerClusters.size() && idx < 10; ++idx) {
       const auto &lc = layerClusters[idx];
-      std::cout << " - LC #" << idx << ", x=" << lc.x() << ", y=" << lc.y() << ", z=" << lc.z()
-                << ", output=" << (*results)[idx] << std::endl;
+      std::cout << " - LC #" << idx << ", eta=" << lc.eta() << ", phi=" << lc.phi()
+                << ", layer_id=" << recHitTools_.getLayerWithOffset(lc.hitsAndFractions().at(0).first)
+                << ", energy=" << lc.energy() << ", output=" << (*weights)[idx] << std::endl;
     }
   }
 
   iEvent.put(std::move(results));
+  iEvent.put(std::move(weights), "weights");
 }
 
 std::vector<float> LayerClusterPileUpWeightsProducer::center_norm_pad(const std::vector<float> &input,
@@ -291,8 +302,11 @@ void LayerClusterPileUpWeightsProducer::make_inputs(
       if (debug_) {
         std::cout << " -- var=" << varname << ", center=" << info.center << ", scale=" << info.norm_factor
                   << ", replace=" << info.replace_inf_value << ", pad=" << info.pad << std::endl;
+        int counts = 0;
         for (const auto &v : val) {
           std::cout << v << ",";
+          if (++counts > 10)
+            break;
         }
         std::cout << std::endl;
       }

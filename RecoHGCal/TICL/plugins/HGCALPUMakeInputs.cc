@@ -37,12 +37,6 @@ std::unordered_map<std::string, std::vector<float>> HGCALPUMakeInputs::makeFeatu
     fts["lc_layer"].push_back(recHitTools.getLayerWithOffset(lc.hitsAndFractions().at(0).first));
   }
 
-  // indices to sort the lc in decreasing energy
-  // since the given `layerClusters` is already sorted by energy
-  // this is just a simple sequence of 0 to max_num_layer_clusters
-  fts.emplace("lc_perm_idx", std::vector<float>(max_num_layer_clusters));
-  std::iota(fts["lc_perm_idx"].begin(), fts["lc_perm_idx"].end(), 0);
-
   // kNN indices
   auto knn = [&](size_t num_neighbors, size_t max_support_size, size_t max_query_size = 0) {
     if (max_query_size == 0)
