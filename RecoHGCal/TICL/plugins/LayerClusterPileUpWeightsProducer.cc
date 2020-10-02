@@ -169,7 +169,7 @@ void LayerClusterPileUpWeightsProducer::fillDescriptions(edm::ConfigurationDescr
   desc.add<edm::FileInPath>("model_path",
                             edm::FileInPath("RecoHGCal/TICL/data/LayerClusterPUId/RandLANet.onnx"));  // model
   desc.add<std::vector<std::string>>("output_names", std::vector<std::string>{"softmax"});
-  desc.add<double>("threshold", 0.3);
+  desc.add<double>("threshold", 0.2);
   desc.addOptionalUntracked<bool>("debugMode", false);
 
   descriptions.add("hgcalLayerClusterPileupWeights", desc);
