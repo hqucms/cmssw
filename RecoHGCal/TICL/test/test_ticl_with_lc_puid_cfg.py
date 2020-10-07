@@ -14,7 +14,7 @@ options.register('eventsToProcess',
 options.parseArguments()
 
 from Configuration.Eras.Era_Phase2C9_cff import Phase2C9
-process = cms.Process('TEST',Phase2C9)
+process = cms.Process('TEST', Phase2C9)
 process.load('Configuration.StandardSequences.Services_cff')
 process.load('SimGeneral.HepPDTESSource.pythiapdt_cfi')
 process.load('FWCore.MessageService.MessageLogger_cfi')
@@ -58,6 +58,10 @@ process.out = cms.OutputModule("PoolOutputModule",
                                fileName = cms.untracked.string('test_ticl_with_lc_puId.root'),
                                outputCommands = cms.untracked.vstring(
                                    'drop *', 
+                                   'keep *_mix_MergedCaloTruth_*',
+                                   'keep *_HGCalRecHit_HGCEERecHits_*',
+                                   'keep *_HGCalRecHit_HGCHEFRecHits_*',
+                                   'keep *_HGCalRecHit_HGCHEBRecHits_*',
                                    'keep *_hgcalLayerClusters*_*_*',
                                    'keep *_hgcalLayerClusterPileupWeights*_*_*',
                                    'keep *_ticlTrackstersEM_*_*',
@@ -65,8 +69,10 @@ process.out = cms.OutputModule("PoolOutputModule",
                                    'keep *_ticlTrackstersTrk_*_*',
                                    'keep *_ticlTrackstersMIP_*_*',
                                    'keep *_ticlTrackstersMerge_*_*',
-                                   'keep *_ticlCandidateFromTracksters_*_*',
-                                   'keep *_pfTICL_*_*',
+                                #    'keep *_ticlCandidateFromTracksters_*_*',
+                                #    'keep *_pfTICL_*_*',
+                                   'keep *_offlinePrimaryVertices_*_*',
+                                   'keep *_fixedGridRhoFastjetAll_*_*',
                                    )
                                )
 
