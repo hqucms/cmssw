@@ -10,12 +10,14 @@
 #include "DataFormats/TrackReco/interface/Track.h"
 #include "TrackingTools/TrajectoryState/interface/TrajectoryStateTransform.h"
 #include "DataFormats/GeometrySurface/interface/BoundDisk.h"
+#include "DataFormats/ParticleFlowReco/interface/PFRecTrack.h"
 
 using namespace ticl;
 
 SeedingRegionByTracks::SeedingRegionByTracks(const edm::ParameterSet &conf, edm::ConsumesCollector &sumes)
     : SeedingRegionAlgoBase(conf, sumes),
       tracks_token_(sumes.consumes<reco::TrackCollection>(conf.getParameter<edm::InputTag>("tracks"))),
+      pftracks_token_(sumes.consumes<edm::View<reco::PFRecTrack>>(conf.getParameter<edm::InputTag>("pfTracks"))),
       cutTk_(conf.getParameter<std::string>("cutTk")),
       propName_(conf.getParameter<std::string>("propagator")),
       hdc_token_(sumes.esConsumes<HGCalDDDConstants, IdealGeometryRecord, edm::Transition::BeginRun>(
@@ -45,10 +47,20 @@ void SeedingRegionByTracks::makeRegions(const edm::Event &ev,
   auto bFieldProd = bfield_.product();
   const Propagator &prop = (*propagator_);
 
+  //get PFRecTrack
+  std::vector<bool> isPFTrack(tracks_h->size(), false);
+  const auto &pfTracks = ev.get(pftracks_token_);
+  for (const auto &t : pfTracks) {
+    isPFTrack[t.trackRef().key()] = true;
+  }
+
   int nTracks = tracks_h->size();
   for (int i = 0; i < nTracks; ++i) {
     const reco::Track &tk = (*tracks_h)[i];
     if (!cutTk_((tk))) {
+      continue;
+    }
+    if (!isPFTrack[i]) {
       continue;
     }
 

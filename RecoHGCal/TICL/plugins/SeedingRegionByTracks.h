@@ -15,6 +15,7 @@
 #include "FWCore/ParameterSet/interface/ConfigurationDescriptions.h"
 #include "FWCore/ParameterSet/interface/ParameterSetDescription.h"
 #include "DataFormats/TrackReco/interface/TrackFwd.h"
+#include "DataFormats/ParticleFlowReco/interface/PFRecTrackFwd.h"
 #include "FWCore/Framework/interface/ConsumesCollector.h"
 #include "TrackingTools/GeomPropagators/interface/Propagator.h"
 #include "MagneticField/Engine/interface/MagneticField.h"
@@ -41,6 +42,7 @@ namespace ticl {
     void buildFirstLayers();
 
     edm::EDGetTokenT<reco::TrackCollection> tracks_token_;
+    edm::EDGetTokenT<edm::View<reco::PFRecTrack>> pftracks_token_;
     std::once_flag initializeGeometry_;
     const HGCalDDDConstants* hgcons_;
     const StringCutObjectSelector<reco::Track> cutTk_;

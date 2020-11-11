@@ -112,14 +112,19 @@ void HGCalTrackCollectionProducer::beginLuminosityBlock(const edm::LuminosityBlo
     minusSurface_[i].clear();
     plusSurface_[i].clear();
     const HGCalDDDConstants& dddCons = hgcGeometries_[i]->topology().dddConstants();
-    std::map<float, float> zrhoCoord;
-    std::map<float, float> innerRadiusCoord;
-    auto theTrForms = dddCons.getTrForms();
-    const auto& firstLayerIt = theTrForms.back();
-    float Z(std::abs(firstLayerIt.h3v.z()));
-    // use hardcoded radii for now (FIX ME)
-    diskInnerRadius_ = 31.5;
-    diskOuterRadius_ = 161.0f;
+
+    // auto theTrForms = dddCons.getTrForms();
+    // const auto& firstLayerIt = theTrForms.back();
+    // float Z(std::abs(firstLayerIt.h3v.z()));
+    // // use hardcoded radii for now (FIX ME)
+    // diskInnerRadius_ = 31.5;
+    // diskOuterRadius_ = 161.0f;
+
+    float Z = dddCons.waferZ(1, true);
+    std::pair<double, double> rMinMax = dddCons.rangeR(Z, true);
+    diskInnerRadius_ = rMinMax.first;
+    diskOuterRadius_ = rMinMax.second;
+
     LogDebug("HGCalTrackCollectionProducer") << "O HAI I'm making a bound disk with Outer R=" << diskOuterRadius_
                                              << " Inner R=" << diskInnerRadius_ << " and Z=" << Z << std::endl;
     minusSurface_[i].push_back(ReferenceCountingPointer<BoundDisk>(new BoundDisk(

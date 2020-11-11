@@ -16,6 +16,8 @@
 #include "PhysicsTools/TensorFlow/interface/TensorFlow.h"
 #include "DataFormats/HGCalReco/interface/TICLCandidate.h"
 
+#include "DataFormats/ParticleFlowReco/interface/PFRecTrack.h"
+
 #include "TrackstersPCA.h"
 
 using namespace ticl;
@@ -47,6 +49,7 @@ private:
   const edm::EDGetTokenT<std::vector<TICLSeedingRegion>> seedingTrk_token_;
   const edm::EDGetTokenT<std::vector<reco::CaloCluster>> clusters_token_;
   const edm::EDGetTokenT<std::vector<reco::Track>> tracks_token_;
+  const edm::EDGetTokenT<std::vector<reco::PFRecTrack>> pftracks_token_;
   const edm::ESGetToken<CaloGeometry, CaloGeometryRecord> geometry_token_;
   const bool optimiseAcrossTracksters_;
   const int eta_bin_window_;
@@ -87,6 +90,7 @@ TrackstersMergeProducer::TrackstersMergeProducer(const edm::ParameterSet &ps, co
       seedingTrk_token_(consumes<std::vector<TICLSeedingRegion>>(ps.getParameter<edm::InputTag>("seedingTrk"))),
       clusters_token_(consumes<std::vector<reco::CaloCluster>>(ps.getParameter<edm::InputTag>("layer_clusters"))),
       tracks_token_(consumes<std::vector<reco::Track>>(ps.getParameter<edm::InputTag>("tracks"))),
+      pftracks_token_(consumes<std::vector<reco::PFRecTrack>>(ps.getParameter<edm::InputTag>("pfTracks"))),
       geometry_token_(esConsumes<CaloGeometry, CaloGeometryRecord>()),
       optimiseAcrossTracksters_(ps.getParameter<bool>("optimiseAcrossTracksters")),
       eta_bin_window_(ps.getParameter<int>("eta_bin_window")),
@@ -489,30 +493,18 @@ void TrackstersMergeProducer::produce(edm::Event &evt, const edm::EventSetup &es
       }
     }
   }
-  // For all seeds that have 0-energy tracksters whose track is not marked as used, create a charged hadron with the track information.
-  for (auto const &s : seedingTrk) {
-    if (usedSeeds[s.index] == false) {
-      auto const &track = tracks[s.index];
-      // emit a charged hadron
-      TICLCandidate tmpCandidate;
-      tmpCandidate.setCharge(track.charge());
-      tmpCandidate.setTrackPtr(edm::Ptr<reco::Track>(track_h, s.index));
-      tmpCandidate.setPdgId(211 * track.charge());
-      float energy = std::sqrt(track.pt() * track.pt() + mpion2);
-      tmpCandidate.setRawEnergy(energy);
-      math::XYZTLorentzVector p4(track.momentum().x(), track.momentum().y(), track.momentum().z(), energy);
-      tmpCandidate.setP4(p4);
-      resultCandidates->push_back(tmpCandidate);
-      usedSeeds[s.index] = true;
-    }
+
+  //get PFRecTrack
+  std::vector<bool> isPFTrack(tracks.size(), false);
+  const auto &pfTracks = evt.get(pftracks_token_);
+  for (const auto &t : pfTracks) {
+    isPFTrack[t.trackRef().key()] = true;
   }
 
-  // for all general tracks (high purity, pt > 1), check if they have been used: if not, promote them as charged hadrons
+  // for all general tracks: if they have not been used and they are pfTracks, promote them as charged hadrons
   for (unsigned i = 0; i < tracks.size(); ++i) {
     auto const &track = tracks[i];
-    if (track.pt() > track_min_pt_ and track.quality(reco::TrackBase::highPurity) and
-        track.missingOuterHits() < track_max_missing_outerhits_ and std::abs(track.outerEta()) > track_min_eta_ and
-        std::abs(track.outerEta()) < track_max_eta_ and usedSeeds[i] == false) {
+    if (usedSeeds[i] == false && isPFTrack[i] == true) {
       // emit a charged hadron
       TICLCandidate tmpCandidate;
       tmpCandidate.setCharge(track.charge());
@@ -726,6 +718,7 @@ void TrackstersMergeProducer::fillDescriptions(edm::ConfigurationDescriptions &d
   desc.add<edm::InputTag>("seedingTrk", edm::InputTag("ticlSeedingTrk"));
   desc.add<edm::InputTag>("layer_clusters", edm::InputTag("hgcalLayerClusters"));
   desc.add<edm::InputTag>("tracks", edm::InputTag("generalTracks"));
+  desc.add<edm::InputTag>("pfTracks", edm::InputTag("hgcalTrackCollection:TracksInHGCal"));
   desc.add<bool>("optimiseAcrossTracksters", true);
   desc.add<int>("eta_bin_window", 1);
   desc.add<int>("phi_bin_window", 1);
