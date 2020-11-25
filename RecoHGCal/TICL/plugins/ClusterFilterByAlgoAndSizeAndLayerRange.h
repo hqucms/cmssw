@@ -17,6 +17,7 @@ namespace ticl {
     ClusterFilterByAlgoAndSizeAndLayerRange(const edm::ParameterSet& ps)
         : ClusterFilterBase(ps),
           algo_number_(ps.getParameter<int>("algo_number")),
+          min_cluster_energy_(ps.getParameter<int>("min_cluster_energy")),
           min_cluster_size_(ps.getParameter<int>("min_cluster_size")),
           max_cluster_size_(ps.getParameter<int>("max_cluster_size")),
           min_layerId_(ps.getParameter<int>("min_layerId")),
@@ -34,7 +35,7 @@ namespace ticl {
         auto layerId = rhtools.getLayerWithOffset(haf[0].first);
 
         if (layerCluster.algo() == algo_number_ and layerId <= max_layerId_ and layerId >= min_layerId_ and
-            haf.size() <= max_cluster_size_ and
+            layerCluster.energy() >= min_cluster_energy_ and haf.size() <= max_cluster_size_ and
             (haf.size() >= min_cluster_size_ or !(rhtools.isSilicon(haf[0].first)))) {
           filteredLayerClusters->emplace_back(cl);
         } else {
@@ -45,6 +46,7 @@ namespace ticl {
 
   private:
     int algo_number_;
+    unsigned int min_cluster_energy_;
     unsigned int min_cluster_size_;
     unsigned int max_cluster_size_;
     unsigned int min_layerId_;
