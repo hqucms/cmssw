@@ -17,7 +17,7 @@ namespace ticl {
     ClusterFilterByAlgoAndSize(const edm::ParameterSet& ps)
         : ClusterFilterBase(ps),
           algo_number_(ps.getParameter<int>("algo_number")),
-          min_cluster_energy_(ps.getParameter<int>("min_cluster_energy")),
+          min_cluster_energy_(ps.getParameter<double>("min_cluster_energy")),
           min_cluster_size_(ps.getParameter<int>("min_cluster_size")),
           max_cluster_size_(ps.getParameter<int>("max_cluster_size")) {}
     ~ClusterFilterByAlgoAndSize() override{};
@@ -42,7 +42,7 @@ namespace ticl {
 
   private:
     int algo_number_;
-    unsigned int min_cluster_energy_;
+    double min_cluster_energy_;
     unsigned int min_cluster_size_;
     unsigned int max_cluster_size_;
   };
