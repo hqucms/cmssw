@@ -26,7 +26,7 @@ pfMassDecorrelatedParticleNetJetTags = boostedJetONNXJetTagsProducer.clone(
                   "probQCDb", "probQCDc", "probQCDothers"],
 )
 
-pfParticleNetMassRegression = boostedJetONNXJetTagsProducer.clone(
+pfParticleNetMassRegressionJetTags = boostedJetONNXJetTagsProducer.clone(
     src = 'pfParticleNetTagInfos',
     preprocess_json = 'RecoBTag/Combined/data/ParticleNetAK8/MassRegression/V01/preprocess.json',
     model_path = 'RecoBTag/Combined/data/ParticleNetAK8/MassRegression/V01/particle-net.onnx',
@@ -38,7 +38,7 @@ from PhysicsTools.PatAlgos.slimming.primaryVertexAssociation_cfi import primaryV
 
 # This task is not used, useful only if we run it from RECO jets (RECO/AOD)
 pfParticleNetTask = cms.Task(puppi, primaryVertexAssociation, pfParticleNetTagInfos,
-                             pfParticleNetJetTags, pfMassDecorrelatedParticleNetJetTags, pfParticleNetMassRegression,
+                             pfParticleNetJetTags, pfMassDecorrelatedParticleNetJetTags, pfParticleNetMassRegressionJetTags,
                              pfParticleNetDiscriminatorsJetTags, pfMassDecorrelatedParticleNetDiscriminatorsJetTags)
 
 # declare all the discriminators
@@ -55,8 +55,8 @@ _pfMassDecorrelatedParticleNetJetTagsProbs = ['pfMassDecorrelatedParticleNetJetT
 _pfMassDecorrelatedParticleNetJetTagsMetaDiscrs = ['pfMassDecorrelatedParticleNetDiscriminatorsJetTags:' + disc.name.value()
                                    for disc in pfMassDecorrelatedParticleNetDiscriminatorsJetTags.discriminators]
 
-_pfParticleNetMassRegressionOutputs = ['pfParticleNetMassRegression:' + flav_name
-                                       for flav_name in pfParticleNetMassRegression.flav_names]
+_pfParticleNetMassRegressionOutputs = ['pfParticleNetMassRegressionJetTags:' + flav_name
+                                       for flav_name in pfParticleNetMassRegressionJetTags.flav_names]
 
 _pfParticleNetJetTagsAll = _pfParticleNetJetTagsProbs + _pfParticleNetJetTagsMetaDiscrs + \
     _pfMassDecorrelatedParticleNetJetTagsProbs + _pfMassDecorrelatedParticleNetJetTagsMetaDiscrs + \
