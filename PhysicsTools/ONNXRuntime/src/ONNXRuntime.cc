@@ -12,6 +12,7 @@
 #include <algorithm>
 #include <numeric>
 #include <functional>
+#include <limits>
 #include "FWCore/Utilities/interface/Exception.h"
 #include "FWCore/Utilities/interface/thread_safety_macros.h"
 
@@ -26,9 +27,7 @@ namespace cms::Ort {
     if (session_options) {
       session_.reset(new Session(env_, model_path.c_str(), *session_options));
     } else {
-      SessionOptions sess_opts;
-      sess_opts.SetIntraOpNumThreads(1);
-      session_.reset(new Session(env_, model_path.c_str(), sess_opts));
+      session_.reset(new Session(env_, model_path.c_str(), defaultSessionOptions()));
     }
     AllocatorWithDefaultOptions allocator;
 
@@ -77,6 +76,22 @@ namespace cms::Ort {
 
   ONNXRuntime::~ONNXRuntime() {}
 
+  SessionOptions ONNXRuntime::defaultSessionOptions(bool use_gpu) {
+    SessionOptions sess_opts;
+    sess_opts.SetIntraOpNumThreads(1);
+    if (use_gpu) {
+      // https://www.onnxruntime.ai/docs/reference/execution-providers/CUDA-ExecutionProvider.html
+      OrtCUDAProviderOptions options;
+      options.device_id = 0;
+      options.arena_extend_strategy = 0;
+      options.cuda_mem_limit = std::numeric_limits<std::size_t>::max();
+      options.cudnn_conv_algo_search = OrtCudnnConvAlgoSearch::EXHAUSTIVE;
+      options.do_copy_in_default_stream = 1;
+      sess_opts.AppendExecutionProvider_CUDA(options);
+    }
+    return sess_opts;
+  }
+
   FloatArrays ONNXRuntime::run(const std::vector<std::string>& input_names,
                                FloatArrays& input_values,
                                const std::vector<std::vector<int64_t>>& input_shapes,
@@ -103,6 +118,10 @@ namespace cms::Ort {
       } else {
         input_dims = input_shapes[input_pos];
         // rely on the given input_shapes to set the batch size
+        if (input_dims[0] != batch_size) {
+          throw cms::Exception("RuntimeError")
+              << "The first element of `input_shapes` (" << input_dims[0] << ") does not match the given `batch_size` (" << batch_size << ")";
+        }
       }
       auto expected_len = std::accumulate(input_dims.begin(), input_dims.end(), 1, std::multiplies<int64_t>());
       if (expected_len != (int64_t)value->size()) {

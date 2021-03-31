@@ -51,7 +51,7 @@ private:
                                      float replace_inf_value = 0,
                                      float min = 0,
                                      float max = -1);
-  void make_inputs(const reco::DeepBoostedJetTagInfo &taginfo);
+  void make_inputs(const std::vector<const reco::DeepBoostedJetTagInfo *> &taginfos);
 
   const edm::EDGetTokenT<TagInfoCollection> src_;
   std::vector<std::string> flav_names_;             // names of the output scores
@@ -59,6 +59,7 @@ private:
   std::vector<std::vector<int64_t>> input_shapes_;  // shapes of each input group (-1 for dynamic axis)
   std::vector<unsigned> input_sizes_;               // total length of each input vector
   std::unordered_map<std::string, PreprocessParams> prep_info_map_;  // preprocessing info for each input group
+  bool batch_eval_ = false;
 
   FloatArrays data_;
 
@@ -68,6 +69,7 @@ private:
 BoostedJetONNXJetTagsProducer::BoostedJetONNXJetTagsProducer(const edm::ParameterSet &iConfig, const ONNXRuntime *cache)
     : src_(consumes<TagInfoCollection>(iConfig.getParameter<edm::InputTag>("src"))),
       flav_names_(iConfig.getParameter<std::vector<std::string>>("flav_names")),
+      batch_eval_(iConfig.getParameter<bool>("batch_eval")),
       debug_(iConfig.getUntrackedParameter<bool>("debugMode", false)) {
   // load preprocessing info
   auto json_path = iConfig.getParameter<std::string>("preprocess_json");
@@ -84,9 +86,9 @@ BoostedJetONNXJetTagsProducer::BoostedJetONNXJetTagsProducer(const edm::Paramete
         prep_params.min_length = group_pset.at("var_length");
         prep_params.max_length = prep_params.min_length;
       } else {
-        prep_params.min_length = group_pset.at("min_length");
+        prep_params.min_length = group_pset.at(batch_eval_ ? "max_length" : "min_length");
         prep_params.max_length = group_pset.at("max_length");
-        input_shapes_.push_back({1, (int64_t)prep_params.var_names.size(), -1});
+        input_shapes_.push_back({1, (int64_t)prep_params.var_names.size(), batch_eval_ ? prep_params.max_length : -1});
       }
       const auto &var_info_pset = group_pset.at("var_infos");
       for (const auto &var_name : prep_params.var_names) {
@@ -195,13 +197,17 @@ void BoostedJetONNXJetTagsProducer::fillDescriptions(edm::ConfigurationDescripti
                                          "probQCDc",
                                          "probQCDothers",
                                      });
+  desc.add<bool>("batch_eval", false);
+  desc.add<bool>("use_gpu", false);
   desc.addOptionalUntracked<bool>("debugMode", false);
 
   descriptions.addWithDefaultLabel(desc);
 }
 
 std::unique_ptr<ONNXRuntime> BoostedJetONNXJetTagsProducer::initializeGlobalCache(const edm::ParameterSet &iConfig) {
-  return std::make_unique<ONNXRuntime>(iConfig.getParameter<edm::FileInPath>("model_path").fullPath());
+  auto session_options = ONNXRuntime::defaultSessionOptions(iConfig.getParameter<bool>("use_gpu"));
+  return std::make_unique<ONNXRuntime>(iConfig.getParameter<edm::FileInPath>("model_path").fullPath(),
+                                       &session_options);
 }
 
 void BoostedJetONNXJetTagsProducer::globalEndJob(const ONNXRuntime *cache) {}
@@ -224,21 +230,56 @@ void BoostedJetONNXJetTagsProducer::produce(edm::Event &iEvent, const edm::Event
     }
   }
 
-  for (unsigned jet_n = 0; jet_n < tag_infos->size(); ++jet_n) {
-    const auto &taginfo = (*tag_infos)[jet_n];
-    std::vector<float> outputs(flav_names_.size(), 0);  // init as all zeros
+  if (batch_eval_) {
+    std::vector<const reco::DeepBoostedJetTagInfo *> taginfos;
+    for (unsigned jet_n = 0; jet_n < tag_infos->size(); ++jet_n) {
+      const auto &taginfo = (*tag_infos)[jet_n];
+      if (!taginfo.features().empty()) {
+        taginfos.push_back(&taginfo);
+      }
+    }
+    const auto batch_size = taginfos.size();
+    std::vector<float> outputs;
 
-    if (!taginfo.features().empty()) {
+    if (batch_size > 0) {
       // convert inputs
-      make_inputs(taginfo);
+      make_inputs(taginfos);
       // run prediction and get outputs
-      outputs = globalCache()->run(input_names_, data_, input_shapes_)[0];
-      assert(outputs.size() == flav_names_.size());
+      outputs = globalCache()->run(input_names_, data_, input_shapes_, {}, batch_size)[0];
+      assert(outputs.size() == batch_size * flav_names_.size());
     }
 
-    const auto &jet_ref = tag_infos->at(jet_n).jet();
-    for (std::size_t flav_n = 0; flav_n < flav_names_.size(); flav_n++) {
-      (*(output_tags[flav_n]))[jet_ref] = outputs[flav_n];
+    unsigned curr_pos = 0;
+    for (unsigned jet_n = 0; jet_n < tag_infos->size(); ++jet_n) {
+      const auto &taginfo = (*tag_infos)[jet_n];
+      const auto &jet_ref = tag_infos->at(jet_n).jet();
+      if (taginfo.features().empty()) {
+        for (std::size_t flav_n = 0; flav_n < flav_names_.size(); flav_n++) {
+          (*(output_tags[flav_n]))[jet_ref] = 0;
+        }
+      } else {
+        for (std::size_t flav_n = 0; flav_n < flav_names_.size(); flav_n++) {
+          (*(output_tags[flav_n]))[jet_ref] = outputs[curr_pos++];
+        }
+      }
+    }
+  } else {
+    for (unsigned jet_n = 0; jet_n < tag_infos->size(); ++jet_n) {
+      const auto &taginfo = (*tag_infos)[jet_n];
+      std::vector<float> outputs(flav_names_.size(), 0);  // init as all zeros
+
+      if (!taginfo.features().empty()) {
+        // convert inputs
+        make_inputs({&taginfo});
+        // run prediction and get outputs
+        outputs = globalCache()->run(input_names_, data_, input_shapes_)[0];
+        assert(outputs.size() == flav_names_.size());
+      }
+
+      const auto &jet_ref = tag_infos->at(jet_n).jet();
+      for (std::size_t flav_n = 0; flav_n < flav_names_.size(); flav_n++) {
+        (*(output_tags[flav_n]))[jet_ref] = outputs[flav_n];
+      }
     }
   }
 
@@ -283,45 +324,55 @@ std::vector<float> BoostedJetONNXJetTagsProducer::center_norm_pad(const std::vec
   return out;
 }
 
-void BoostedJetONNXJetTagsProducer::make_inputs(const reco::DeepBoostedJetTagInfo &taginfo) {
+void BoostedJetONNXJetTagsProducer::make_inputs(const std::vector<const reco::DeepBoostedJetTagInfo *> &taginfos) {
   for (unsigned igroup = 0; igroup < input_names_.size(); ++igroup) {
+    if (batch_eval_) {
+      input_shapes_[igroup][0] = taginfos.size();
+    }
     const auto &group_name = input_names_[igroup];
     const auto &prep_params = prep_info_map_.at(group_name);
     auto &group_values = data_[igroup];
-    group_values.resize(input_sizes_[igroup]);
+    group_values.resize(taginfos.size() * input_sizes_[igroup]);
     // first reset group_values to 0
     std::fill(group_values.begin(), group_values.end(), 0);
     unsigned curr_pos = 0;
-    // transform/pad
-    for (unsigned i = 0; i < prep_params.var_names.size(); ++i) {
-      const auto &varname = prep_params.var_names[i];
-      const auto &raw_value = taginfo.features().get(varname);
-      const auto &info = prep_params.info(varname);
-      auto val = center_norm_pad(raw_value,
-                                 info.center,
-                                 info.norm_factor,
-                                 prep_params.min_length,
-                                 prep_params.max_length,
-                                 info.pad,
-                                 info.replace_inf_value,
-                                 info.lower_bound,
-                                 info.upper_bound);
-      std::copy(val.begin(), val.end(), group_values.begin() + curr_pos);
-      curr_pos += val.size();
-      if (i == 0 && (!input_shapes_.empty())) {
-        input_shapes_[igroup][2] = val.size();
-      }
-
-      if (debug_) {
-        std::cout << " -- var=" << varname << ", center=" << info.center << ", scale=" << info.norm_factor
-                  << ", replace=" << info.replace_inf_value << ", pad=" << info.pad << std::endl;
-        for (const auto &v : val) {
-          std::cout << v << ",";
+    for (const auto *taginfo_ptr : taginfos) {
+      // transform/pad
+      for (unsigned i = 0; i < prep_params.var_names.size(); ++i) {
+        const auto &varname = prep_params.var_names[i];
+        const auto &raw_value = taginfo_ptr->features().get(varname);
+        const auto &info = prep_params.info(varname);
+        auto val = center_norm_pad(raw_value,
+                                   info.center,
+                                   info.norm_factor,
+                                   prep_params.min_length,
+                                   prep_params.max_length,
+                                   info.pad,
+                                   info.replace_inf_value,
+                                   info.lower_bound,
+                                   info.upper_bound);
+        std::copy(val.begin(), val.end(), group_values.begin() + curr_pos);
+        curr_pos += val.size();
+        if (i == 0 && (!input_shapes_.empty())) {
+          input_shapes_[igroup][2] = val.size();
         }
-        std::cout << std::endl;
+
+        if (debug_) {
+          std::cout << " -- var=" << varname << ", center=" << info.center << ", scale=" << info.norm_factor
+                    << ", replace=" << info.replace_inf_value << ", pad=" << info.pad << std::endl;
+          for (const auto &v : val) {
+            std::cout << v << ",";
+          }
+          std::cout << std::endl;
+        }
       }
     }
-    group_values.resize(curr_pos);
+    if (!batch_eval_) {
+      group_values.resize(curr_pos);
+    }
+    if (debug_) {
+      std::cout << " ------------------------ " << std::endl;
+    }
   }
 }
 
