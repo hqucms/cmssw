@@ -123,6 +123,7 @@ namespace muon {
       {"MvaLoose", reco::Muon::MvaLoose},
       {"MvaMedium", reco::Muon::MvaMedium},
       {"MvaTight", reco::Muon::MvaTight},
+      {"MvaIDwp", reco::Muon::MvaIDwp},
       {"MiniIsoLoose", reco::Muon::MiniIsoLoose},
       {"MiniIsoMedium", reco::Muon::MiniIsoMedium},
       {"MiniIsoTight", reco::Muon::MiniIsoTight},

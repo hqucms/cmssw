@@ -233,6 +233,7 @@ namespace reco {
       MvaVVTight = 1UL << 31,
       LowPtMvaLoose = 1UL << 32,
       LowPtMvaMedium = 1UL << 33,
+      MvaIDwp = 1UL << 34,
     };
 
     bool passed(uint64_t selection) const { return (selectors_ & selection) == selection; }

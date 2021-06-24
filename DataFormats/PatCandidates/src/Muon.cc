@@ -32,6 +32,7 @@ Muon::Muon()
       jetPtRatio_(0),
       jetPtRel_(0),
       mvaValue_(0),
+      mvaIDValue_(0),
       lowptMvaValue_(0),
       softMvaValue_(0),
       inverseBeta_(0),
