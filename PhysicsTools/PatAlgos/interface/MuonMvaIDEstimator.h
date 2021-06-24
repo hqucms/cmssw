@@ -3,7 +3,7 @@
 
 #include <memory>
 #include <string>
-
+#include "PhysicsTools/ONNXRuntime/interface/ONNXRuntime.h"
 namespace pat {
   class Muon;
 }
@@ -13,21 +13,21 @@ namespace edm {
 }
 
 namespace pat {
-class MuonMvaIDEstimator : public edm::stream::EDProducer< edm::GlobalCache<ONNXRuntime> > {
+class MuonMvaIDEstimator : public edm::stream::EDProducer<edm::GlobalCache<cms::Ort::ONNXRuntime>> {
 	public:
-	   explicit MuonMvaIDEstimator(const edm::ParameterSet&, const ONNXRuntime *);
+	   explicit MuonMvaIDEstimator(const edm::ParameterSet&, const cms::Ort::ONNXRuntime *);
 	   ~MuonMvaIDEstimator();
 	 
 	   static void fillDescriptions(edm::ConfigurationDescriptions &);
-	   static std::unique_ptr<ONNXRuntime> initializeGlobalCache(const edm::ParameterSet &);
-	   static void globalEndJob(const ONNXRuntime *);
-	   float produce(const pat::Muon& imuon) const;
+	   static std::unique_ptr<cms::Ort::ONNXRuntime> initializeGlobalCache(const edm::ParameterSet &);
+	   static void globalEndJob(const cms::Ort::ONNXRuntime *);
+	   float computeMVAID(const pat::Muon& imuon) const;
 	   
 	private:
 	   const pat::Muon& imuon;
 	   std::vector<std::string> flav_names_;             // names of the output scores
 	   std::vector<std::string> input_names_;            // names of each input group - the ordering is important!
-	   FloatArrays input_values_;
+	   std::vector<float> input_values_;
 	 };
 };	 
 #endif

@@ -1,4 +1,4 @@
-#include "PhysicsTools/ONNXRuntime/interface/ONNXRuntime.h"
+#include "PhysicsTools/ONNXRuntime/ONNXRuntime.h"
 #include "PhysicsTools/PatAlgos/interface/MuonMvaIDEstimator.h"
 #include "FWCore/Framework/interface/Event.h"
 #include "FWCore/Framework/interface/Frameworkfwd.h"
@@ -38,12 +38,12 @@ MuonMvaIDEstimator::~MuonMvaIDEstimator() {}
    descriptions.addWithDefaultLabel(desc);
  }
  
- std::unique_ptr<ONNXRuntime> MuonMvaIDEstimator::initializeGlobalCache(const edm::ParameterSet &iConfig) {
-   return std::make_unique<ONNXRuntime>(iConfig.getParameter<edm::FileInPath>("mvaIDTrainingFile").fullPath());
+ std::unique_ptr<cms::Ort::ONNXRuntime> MuonMvaIDEstimator::initializeGlobalCache(const edm::ParameterSet &iConfig) {
+   return std::make_unique<cms::Ort::ONNXRuntime>(iConfig.getParameter<edm::FileInPath>("mvaIDTrainingFile").fullPath());
  }
- void MuonMvaIDEstimator::globalEndJob(const ONNXRuntime *cache) {}
+ void MuonMvaIDEstimator::globalEndJob(const cms::Ort::ONNXRuntime *cache) {}
  
- float MuonMvaIDEstimator::produce(const pat::Muon& muon) const {
+ float MuonMvaIDEstimator::computeMVAID(const pat::Muon& muon) const {
    float local_chi2  = muon.combinedQuality().chi2LocalPosition;
    float kink  = muon.combinedQuality().trkKink;   
    float segment_comp =  muon.segmentCompatibility( arbitrationType);  
