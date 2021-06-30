@@ -783,7 +783,7 @@ void PATMuonProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
     }
     
     //MVA ID
-    if (computeMuonMVA_){
+    if (computeMuonIDMVA_){
        mvaID = globalCache()->muonMvaIDEstimator()->computeMVAID(muon)[1];
 	   muon.setMvaIDValue(mvaID);
 	   muon.setSelector(reco::Muon::MvaIDwp, muon.mvaIDValue() > 0.48);
