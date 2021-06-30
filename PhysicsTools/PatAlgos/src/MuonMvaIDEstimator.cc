@@ -1,12 +1,13 @@
-#include "PhysicsTools/ONNXRuntime/ONNXRuntime.h"
+//#include "PhysicsTools/ONNXRuntime/interface/ONNXRuntime.h"
 #include "PhysicsTools/PatAlgos/interface/MuonMvaIDEstimator.h"
 #include "FWCore/Framework/interface/Event.h"
 #include "FWCore/Framework/interface/Frameworkfwd.h"
 #include "FWCore/Framework/interface/MakerMacros.h"
-#include "FWCore/Framework/interface/stream/EDAnalyzer.h"
+
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
-#include "FWCore/Framework/interface/stream/EDProducer.h"
-#include "FWCore/Utilities/interface/StreamID.h"
+//#include "FWCore/Framework/interface/stream/EDProducer.h"
+//#include "FWCore/Utilities/interface/StreamID.h"
+//#include "FWCore/Framework/interface/stream/EDAnalyzer.h"
 
 #include "FWCore/ParameterSet/interface/FileInPath.h"
 #include "CommonTools/MVAUtils/interface/GBRForestTools.h"
@@ -22,6 +23,7 @@
 using namespace pat;
 using namespace cms::Ort;
 
+
 MuonMvaIDEstimator::~MuonMvaIDEstimator() {}
  
  void MuonMvaIDEstimator::fillDescriptions(edm::ConfigurationDescriptions &descriptions) {
@@ -31,8 +33,8 @@ MuonMvaIDEstimator::~MuonMvaIDEstimator() {}
                              edm::FileInPath("RecoMuon/MuonIdentification/data/mvaID.onnx"));
    desc.add<std::vector<std::string>>("flav_names",
                                       std::vector<std::string>{
-                                          "probGOOD",
                                           "probBAD",
+                                          "probGOOD",
                                       });
  
    descriptions.addWithDefaultLabel(desc);
@@ -42,41 +44,54 @@ MuonMvaIDEstimator::~MuonMvaIDEstimator() {}
    return std::make_unique<cms::Ort::ONNXRuntime>(iConfig.getParameter<edm::FileInPath>("mvaIDTrainingFile").fullPath());
  }
  void MuonMvaIDEstimator::globalEndJob(const cms::Ort::ONNXRuntime *cache) {}
- 
- float MuonMvaIDEstimator::computeMVAID(const pat::Muon& muon) const {
+ const reco::Muon::ArbitrationType arbitrationType = reco::Muon::SegmentAndTrackArbitration;
+ std::vector<float> MuonMvaIDEstimator::computeMVAID(const pat::Muon& muon) const {
    float local_chi2  = muon.combinedQuality().chi2LocalPosition;
-   float kink  = muon.combinedQuality().trkKink;   
+   float kink  = muon.combinedQuality().trkKink;  
+     
    float segment_comp =  muon.segmentCompatibility( arbitrationType);  
-   float nMatchedStations = muon.numberOfMatchedStations();   
+   float n_MatchedStations = muon.numberOfMatchedStations();   
    float pt = muon.pt();
    float eta = muon.eta();
-   float global_muon = muon.isGlobalMuon();  
+   float global_muon = muon.isGlobalMuon(); 
+   float Valid_pixel;
+   float tracker_layers;
+   float validFraction; 
    if (muon.innerTrack().isNonnull()){
-       float Valid_pixel  = muon.innerTrack()->hitPattern().numberOfValidPixelHits();
-       float tracker_layers  = muon.innerTrack()->hitPattern().trackerLayersWithMeasurement();
-       float validFraction   = muon.innerTrack()->validFraction();
+       Valid_pixel  = muon.innerTrack()->hitPattern().numberOfValidPixelHits();
+       tracker_layers  = muon.innerTrack()->hitPattern().trackerLayersWithMeasurement();
+       validFraction   = muon.innerTrack()->validFraction();
        }
    else{
        Valid_pixel = -99.;
-       tracker_layers = -99;
-       validFraction   = -99;
-       }  
+       tracker_layers = -99.0;
+       validFraction   = -99.0;
+       } 
+   float norm_chi2; 
+   float n_Valid_hits;
    if (muon.globalTrack().isNonnull()){
-       float norm_chi2  = muon.globalTrack()->normalizedChi2();
-       float n_Valid_hits = muon.globalTrack()->hitPattern().numberOfValidMuonHits(); 
+       norm_chi2  = muon.globalTrack()->normalizedChi2();
+       n_Valid_hits = muon.globalTrack()->hitPattern().numberOfValidMuonHits(); 
        }
    else{
-       float norm_chi2  = muon.innerTrack()->normalizedChi2();
-       float n_Valid_hits = muon.innerTrack()->hitPattern().numberOfValidMuonHits();
+       norm_chi2  = muon.innerTrack()->normalizedChi2();
+       n_Valid_hits = muon.innerTrack()->hitPattern().numberOfValidMuonHits();
        }
        
-   std::vector<std::string> input_names_ {'global_muon','validFraction','norm_chi2','local_chi2','kink','segment_comp','n_Valid_hits','n_MatchedStations','Valid_pixel','tracker_layers','pt','eta'};
-   float input_values_ {global_muon,validFraction,norm_chi2,local_chi2,kink,segment_comp,n_Valid_hits,n_MatchedStations,Valid_pixel,tracker_layers,pt,eta};
-   std::vector<std::string> flav_names_{"probGOOD","probBAD"}
+   std::vector<std::string> input_names_ {"global_muon","validFraction","norm_chi2","local_chi2","kink","segment_comp","n_Valid_hits","n_MatchedStations","Valid_pixel","tracker_layers","pt","eta"};
+   std::vector<float> vars = {global_muon,validFraction,norm_chi2,local_chi2,kink,segment_comp,n_Valid_hits,n_MatchedStations,Valid_pixel,tracker_layers,pt,eta};
+   std::vector<std::string> flav_names_{"probBAD","probGOOD"};
+   
+   //for (long unsigned int i=0; i < vars.size(); i++){
+   //  input_values_.emplace_back(vars[i]);
+   //}
+   cms::Ort::FloatArrays input_values_;
+   //cms::Ort::FloatArrays outputs;
+   input_values_.emplace_back(vars);
+   //float outputs(int size, int s);  // init as all zeros
+   std::vector<float> outputs;  // init as all zeros
 
-   std::vector<float> outputs(flav_names_.size(), 0);  // init as all zeros
-
-   outputs = globalCache()->run(input_names_, input_values_)[0];
+   outputs = globalCache()->run(input_names_, input_values_)[1];
    assert(outputs.size() == flav_names_.size());
-   return outputs
+   return outputs;
 }

@@ -16,7 +16,7 @@
 #include <string>
 #include <memory>
 
-#include "PhysicsTools/ONNXRuntime/interface/onnxruntime_cxx_api.h"
+#include "onnxruntime/core/session/onnxruntime_cxx_api.h"
 
 namespace cms::Ort {
 
