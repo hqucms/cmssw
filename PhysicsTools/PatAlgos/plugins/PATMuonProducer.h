@@ -72,7 +72,7 @@ namespace pat {
     explicit PATMuonProducer(const edm::ParameterSet& iConfig, PATMuonHeavyObjectCache const*);
     /// default destructur
     ~PATMuonProducer() override;
-
+    
     static std::unique_ptr<PATMuonHeavyObjectCache> initializeGlobalCache(const edm::ParameterSet& iConfig) {
       return std::make_unique<PATMuonHeavyObjectCache>(iConfig);
     }

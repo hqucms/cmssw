@@ -76,11 +76,9 @@ MuonMvaIDEstimator::~MuonMvaIDEstimator() {}
        norm_chi2  = muon.innerTrack()->normalizedChi2();
        n_Valid_hits = muon.innerTrack()->hitPattern().numberOfValidMuonHits();
        }
-       
    std::vector<std::string> input_names_ {"global_muon","validFraction","norm_chi2","local_chi2","kink","segment_comp","n_Valid_hits","n_MatchedStations","Valid_pixel","tracker_layers","pt","eta"};
    std::vector<float> vars = {global_muon,validFraction,norm_chi2,local_chi2,kink,segment_comp,n_Valid_hits,n_MatchedStations,Valid_pixel,tracker_layers,pt,eta};
    std::vector<std::string> flav_names_{"probBAD","probGOOD"};
-   
    //for (long unsigned int i=0; i < vars.size(); i++){
    //  input_values_.emplace_back(vars[i]);
    //}
@@ -89,8 +87,9 @@ MuonMvaIDEstimator::~MuonMvaIDEstimator() {}
    input_values_.emplace_back(vars);
    //float outputs(int size, int s);  // init as all zeros
    std::vector<float> outputs;  // init as all zeros
-
+   //std::cout << Form("%d -- %d",input_values_[10], input_values_[11]) << std::endl;
    outputs = globalCache()->run(input_names_, input_values_)[1];
+   std::cout << "holi" << "\n";
    assert(outputs.size() == flav_names_.size());
    return outputs;
 }

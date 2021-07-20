@@ -58,6 +58,7 @@
 using namespace pat;
 using namespace std;
 
+
 PATMuonHeavyObjectCache::PATMuonHeavyObjectCache(const edm::ParameterSet& iConfig) {
   if (iConfig.getParameter<bool>("computeMuonMVA")) {
     edm::FileInPath mvaTrainingFile = iConfig.getParameter<edm::FileInPath>("mvaTrainingFile");
@@ -316,6 +317,7 @@ void PATMuonProducer::fillHltTriggerInfo(pat::Muon& muon,
 }
 
 void PATMuonProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
+  cout << "produce..." << "\n";
   // get the tracking Geometry
   edm::ESHandle<GlobalTrackingGeometry> geometry;
   iSetup.get<GlobalTrackingGeometryRecord>().get(geometry);
@@ -784,8 +786,11 @@ void PATMuonProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
     
     //MVA ID
     if (computeMuonIDMVA_){
-       mvaID = globalCache()->muonMvaIDEstimator()->computeMVAID(muon)[1];
+	   cout << "before compute mvaID" << "\n";
+       mvaID = std::unique_ptr<MuonMvaIDEstimator>()->computeMVAID(muon)[1];
+       cout << "mvaID"<< "\n";
 	   muon.setMvaIDValue(mvaID);
+	   cout << "setting value" << "\n";
 	   muon.setSelector(reco::Muon::MvaIDwp, muon.mvaIDValue() > 0.48);
 		}
     
