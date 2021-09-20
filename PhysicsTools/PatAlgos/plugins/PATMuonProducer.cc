@@ -70,7 +70,7 @@ PATMuonHeavyObjectCache::PATMuonHeavyObjectCache(const edm::ParameterSet& iConfi
 
   if (iConfig.getParameter<bool>("computeMuonIDMVA")) {
     edm::FileInPath mvaIDTrainingFile = iConfig.getParameter<edm::FileInPath>("mvaIDTrainingFile");
-    muonMvaIDEstimator_ = std::unique_ptr<MuonMvaIDEstimator>();
+    muonMvaIDEstimator_ = std::make_unique<MuonMvaIDEstimator>(mvaIDTrainingFile);
   }
 
   if (iConfig.getParameter<bool>("computeSoftMuonMVA")) {
@@ -787,8 +787,8 @@ void PATMuonProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
     //MVA ID
     if (computeMuonIDMVA_){
 	   cout << "before compute mvaID" << "\n";
-       mvaID = std::unique_ptr<MuonMvaIDEstimator>()->computeMVAID(muon)[1];
-       cout << "mvaID"<< "\n";
+	   mvaID = globalCache()->muonMvaIDEstimator()->computeMVAID(muon)[1];
+	   cout << "mvaID"<< "\n";
 	   muon.setMvaIDValue(mvaID);
 	   cout << "setting value" << "\n";
 	   muon.setSelector(reco::Muon::MvaIDwp, muon.mvaIDValue() > 0.48);

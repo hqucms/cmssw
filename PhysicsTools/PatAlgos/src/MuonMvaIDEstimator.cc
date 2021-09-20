@@ -22,6 +22,12 @@
 using namespace pat;
 using namespace cms::Ort;
 
+MuonMvaIDEstimator::MuonMvaIDEstimator(const edm::FileInPath& weightsfile){
+  std::cout << "Im here" << std::endl;
+  randomForest_ = std::make_unique<ONNXRuntime>(weightsfile.fullPath());
+  std::cout << randomForest_.get() << std::endl;
+}
+
 
 MuonMvaIDEstimator::~MuonMvaIDEstimator() {}
  
@@ -85,10 +91,10 @@ MuonMvaIDEstimator::~MuonMvaIDEstimator() {}
    cms::Ort::FloatArrays input_values_;
    //cms::Ort::FloatArrays outputs;
    input_values_.emplace_back(vars);
-   //float outputs(int size, int s);  // init as all zeros
    std::vector<float> outputs;  // init as all zeros
    //std::cout << Form("%d -- %d",input_values_[10], input_values_[11]) << std::endl;
-   outputs = globalCache()->run(input_names_, input_values_)[1];
+   std::cout << randomForest_.get() << std::endl;
+   outputs = randomForest_->run(input_names_, input_values_)[1];
    std::cout << "holi" << "\n";
    assert(outputs.size() == flav_names_.size());
    return outputs;

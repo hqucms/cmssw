@@ -18,11 +18,10 @@ namespace edm {
 }
 
 namespace pat {
-class MuonMvaIDEstimator : public edm::stream::EDProducer<edm::GlobalCache<cms::Ort::ONNXRuntime>> {
-//class MuonMvaIDEstimator {
-	public:
-           explicit MuonMvaIDEstimator(const edm::ParameterSet&, const cms::Ort::ONNXRuntime *);
-	   ~MuonMvaIDEstimator();
+class MuonMvaIDEstimator {
+ public:
+  MuonMvaIDEstimator(const edm::FileInPath& weightsfile);
+  ~MuonMvaIDEstimator();
 	 
 	   static void fillDescriptions(edm::ConfigurationDescriptions &);
 	   static std::unique_ptr<cms::Ort::ONNXRuntime> initializeGlobalCache(const edm::ParameterSet &);
@@ -30,11 +29,9 @@ class MuonMvaIDEstimator : public edm::stream::EDProducer<edm::GlobalCache<cms::
 	   std::vector<float> computeMVAID(const pat::Muon& imuon) const;
 	   
 	private:
-	   const pat::Muon& imuon;
 	   std::vector<std::string> flav_names_;             // names of the output scores
 	   std::vector<std::string> input_names_;            // names of each input group - the ordering is important!
-	   std::vector<float> outputs; 
-           //std::unique_ptr<const cms::Ort::ONNXRuntime> outputs;
+           std::unique_ptr<const cms::Ort::ONNXRuntime> randomForest_;
 	 };
 };	 
 #endif
