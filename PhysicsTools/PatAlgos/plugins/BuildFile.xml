@@ -1,7 +1,6 @@
 <export>
 </export>
 <library name="PhysicsToolsPatAlgos_plugins" file="*.cc">
-  <use name="PhysicsTools/ONNXRuntime"/>
   <use name="PhysicsTools/PatAlgos"/>
   <use name="FWCore/Framework"/>
   <use name="FWCore/ParameterSet"/>

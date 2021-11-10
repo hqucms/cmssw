@@ -21,7 +21,6 @@
   <use name="boost_regex"/>
   <use name="CommonTools/Utils"/>
   <use name="DataFormats/ParticleFlowCandidate"/>
-  <use name="PhysicsTools/ONNXRuntime"/>
   <flags EDM_PLUGIN="1"/>
 </library>
 
@@ -47,6 +46,5 @@
   <use name="CommonTools/Utils"/>
   <use name="DataFormats/ParticleFlowCandidate"/>
   <use name="PhysicsTools/SelectorUtils"/>
-  <use name="PhysicsTools/ONNXRuntime"/>
   <flags EDM_PLUGIN="1"/>
 </library>

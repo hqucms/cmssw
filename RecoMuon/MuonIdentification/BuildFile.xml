@@ -1,4 +1,3 @@
-<use name="PhysicsTools/ONNXRuntime"/>
 <use name="DataFormats/GeometrySurface"/>
 <use name="DataFormats/GeometryVector"/>
 <use name="DataFormats/Math"/>
