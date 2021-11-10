@@ -1,3 +1,5 @@
+<use name="PhysicsTools/ONNXRuntime"/>
+<use name="onnxruntime"/>
 <use name="CommonTools/CandAlgos"/>
 <use name="CommonTools/MVAUtils"/>
 <use name="DataFormats/Candidate"/>

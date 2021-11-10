@@ -27,9 +27,10 @@ def miniAOD_customizeCommon(process):
     process.patMuons.puppiNoLeptonsIsolationNeutralHadrons = cms.InputTag("muonPUPPINoLeptonsIsolation","h0-DR040-ThresholdVeto000-ConeVeto001")
     process.patMuons.puppiNoLeptonsIsolationPhotons        = cms.InputTag("muonPUPPINoLeptonsIsolation","gamma-DR040-ThresholdVeto000-ConeVeto001")
 
-    process.patMuons.computeMiniIso = True
-    process.patMuons.computeMuonMVA = True
-    process.patMuons.computeSoftMuonMVA = True
+    process.patMuons.computeMiniIso = False
+    process.patMuons.computeMuonMVA = False
+    process.patMuons.computeMuonIDMVA = True
+    process.patMuons.computeSoftMuonMVA = False
 
     process.patMuons.addTriggerMatching = True
     from Configuration.Eras.Modifier_run2_muon_2016_cff import run2_muon_2016

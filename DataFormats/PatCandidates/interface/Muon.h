@@ -285,6 +285,10 @@ namespace pat {
     /// Muon MVA
     float mvaValue() const { return mvaValue_; }
     void setMvaValue(float mva) { mvaValue_ = mva; }
+    
+    /// Muon MVA ID
+    float mvaIDValue() const { return mvaIDValue_; }
+    void setMvaIDValue(float mvaID) { mvaIDValue_ = mvaID; }
 
     // Low pt Muon MVA
     float lowptMvaValue() const { return lowptMvaValue_; }
@@ -417,6 +421,7 @@ namespace pat {
 
     /// Muon MVA
     float mvaValue_;
+    float mvaIDValue_;
     float lowptMvaValue_;
     float softMvaValue_;
 

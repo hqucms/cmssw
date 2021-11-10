@@ -33,6 +33,7 @@
 #include "PhysicsTools/PatAlgos/interface/PATUserDataHelper.h"
 #include "TrackingTools/TransientTrack/interface/TransientTrackBuilder.h"
 #include "PhysicsTools/PatAlgos/interface/MuonMvaEstimator.h"
+#include "PhysicsTools/PatAlgos/interface/MuonMvaIDEstimator.h"
 #include "PhysicsTools/PatAlgos/interface/SoftMuonMvaEstimator.h"
 #include "DataFormats/PatCandidates/interface/TriggerObjectStandAlone.h"
 #include "Geometry/Records/interface/GlobalTrackingGeometryRecord.h"
@@ -46,6 +47,7 @@ namespace pat {
     PATMuonHeavyObjectCache(const edm::ParameterSet&);
 
     std::unique_ptr<const pat::MuonMvaEstimator> const& muonMvaEstimator() const { return muonMvaEstimator_; }
+    std::unique_ptr<const pat::MuonMvaIDEstimator> const& muonMvaIDEstimator() const { return muonMvaIDEstimator_; }
     std::unique_ptr<const pat::MuonMvaEstimator> const& muonLowPtMvaEstimator() const { return muonLowPtMvaEstimator_; }
 
     std::unique_ptr<const pat::SoftMuonMvaEstimator> const& softMuonMvaEstimator() const {
@@ -55,6 +57,7 @@ namespace pat {
   private:
     std::unique_ptr<const pat::MuonMvaEstimator> muonLowPtMvaEstimator_;
     std::unique_ptr<const pat::MuonMvaEstimator> muonMvaEstimator_;
+    std::unique_ptr<const pat::MuonMvaIDEstimator> muonMvaIDEstimator_;
     std::unique_ptr<const pat::SoftMuonMvaEstimator> softMuonMvaEstimator_;
   };
 
@@ -69,7 +72,7 @@ namespace pat {
     explicit PATMuonProducer(const edm::ParameterSet& iConfig, PATMuonHeavyObjectCache const*);
     /// default destructur
     ~PATMuonProducer() override;
-
+    
     static std::unique_ptr<PATMuonHeavyObjectCache> initializeGlobalCache(const edm::ParameterSet& iConfig) {
       return std::make_unique<PATMuonHeavyObjectCache>(iConfig);
     }
@@ -223,6 +226,7 @@ namespace pat {
     edm::EDGetTokenT<edm::ValueMap<float>> PUPPINoLeptonsIsolation_photons_;
     /// standard muon selectors
     bool computeMuonMVA_;
+    bool computeMuonIDMVA_;
     bool computeSoftMuonMVA_;
     bool recomputeBasicSelectors_;
     bool mvaUseJec_;

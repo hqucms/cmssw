@@ -40,6 +40,7 @@
 
 #include "PhysicsTools/PatUtils/interface/MiniIsolation.h"
 #include "PhysicsTools/PatAlgos/interface/MuonMvaEstimator.h"
+#include "PhysicsTools/PatAlgos/interface/MuonMvaIDEstimator.h"
 #include "FWCore/ParameterSet/interface/FileInPath.h"
 #include "JetMETCorrections/JetCorrector/interface/JetCorrector.h"
 
@@ -57,6 +58,7 @@
 using namespace pat;
 using namespace std;
 
+
 PATMuonHeavyObjectCache::PATMuonHeavyObjectCache(const edm::ParameterSet& iConfig) {
   if (iConfig.getParameter<bool>("computeMuonMVA")) {
     edm::FileInPath mvaTrainingFile = iConfig.getParameter<edm::FileInPath>("mvaTrainingFile");
@@ -64,6 +66,11 @@ PATMuonHeavyObjectCache::PATMuonHeavyObjectCache(const edm::ParameterSet& iConfi
     float mvaDrMax = iConfig.getParameter<double>("mvaDrMax");
     muonMvaEstimator_ = std::make_unique<MuonMvaEstimator>(mvaTrainingFile, mvaDrMax);
     muonLowPtMvaEstimator_ = std::make_unique<MuonMvaEstimator>(mvaLowPtTrainingFile, mvaDrMax);
+  }
+
+  if (iConfig.getParameter<bool>("computeMuonIDMVA")) {
+    edm::FileInPath mvaIDTrainingFile = iConfig.getParameter<edm::FileInPath>("mvaIDTrainingFile");
+    muonMvaIDEstimator_ = std::make_unique<MuonMvaIDEstimator>(mvaIDTrainingFile);
   }
 
   if (iConfig.getParameter<bool>("computeSoftMuonMVA")) {
@@ -76,6 +83,7 @@ PATMuonProducer::PATMuonProducer(const edm::ParameterSet& iConfig, PATMuonHeavyO
     : relMiniIsoPUCorrected_(0),
       useUserData_(iConfig.exists("userData")),
       computeMuonMVA_(false),
+      computeMuonIDMVA_(false),
       computeSoftMuonMVA_(false),
       recomputeBasicSelectors_(false),
       mvaUseJec_(false),
@@ -187,6 +195,7 @@ PATMuonProducer::PATMuonProducer(const edm::ParameterSet& iConfig, PATMuonHeavyO
   // standard selectors
   recomputeBasicSelectors_ = iConfig.getParameter<bool>("recomputeBasicSelectors");
   computeMuonMVA_ = iConfig.getParameter<bool>("computeMuonMVA");
+  computeMuonIDMVA_ = iConfig.getParameter<bool>("computeMuonIDMVA");
   if (computeMuonMVA_ and not computeMiniIso_)
     throw cms::Exception("ConfigurationError") << "MiniIso is needed for Muon MVA calculation.\n";
 
@@ -308,6 +317,7 @@ void PATMuonProducer::fillHltTriggerInfo(pat::Muon& muon,
 }
 
 void PATMuonProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
+  cout << "produce..." << "\n";
   // get the tracking Geometry
   edm::ESHandle<GlobalTrackingGeometry> geometry;
   iSetup.get<GlobalTrackingGeometryRecord>().get(geometry);
@@ -712,6 +722,7 @@ void PATMuonProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
     float jetPtRatio = 0.0;
     float jetPtRel = 0.0;
     float mva = 0.0;
+    float mvaID = 0.0;
     float mva_lowpt = 0.0;
     if (computeMuonMVA_ && primaryVertexIsValid && computeMiniIso_) {
       if (mvaUseJec_) {
@@ -738,7 +749,7 @@ void PATMuonProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
         mva_lowpt = globalCache()->muonLowPtMvaEstimator()->computeMva(
             muon, primaryVertex, *(mvaBTagCollectionTag.product()), jetPtRatio, jetPtRel, miniIsoValue);
       }
-
+	
       muon.setMvaValue(mva);
       muon.setLowPtMvaValue(mva_lowpt);
       muon.setJetPtRatio(jetPtRatio);
@@ -772,7 +783,17 @@ void PATMuonProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
         muon.setSelector(reco::Muon::LowPtMvaMedium, muon.lowptMvaValue() > -0.20);
       }
     }
-
+    
+    //MVA ID
+    if (computeMuonIDMVA_){
+	   cout << "before compute mvaID" << "\n";
+	   mvaID = globalCache()->muonMvaIDEstimator()->computeMVAID(muon)[1];
+	   cout << "mvaID"<< "\n";
+	   muon.setMvaIDValue(mvaID);
+	   cout << "setting value" << "\n";
+	   muon.setSelector(reco::Muon::MvaIDwp, muon.mvaIDValue() > 0.48);
+		}
+    
     //SOFT MVA
     if (computeSoftMuonMVA_) {
       float mva = globalCache()->softMuonMvaEstimator()->computeMva(muon);
