@@ -29,6 +29,8 @@ namespace cms::Ort {
     ONNXRuntime& operator=(const ONNXRuntime&) = delete;
     ~ONNXRuntime();
 
+    static ::Ort::SessionOptions defaultSessionOptions(bool use_cuda = false);
+
     // Run inference and get outputs
     // input_names: list of the names of the input nodes.
     // input_values: list of input arrays for each input node. The order of `input_values` must match `input_names`.
