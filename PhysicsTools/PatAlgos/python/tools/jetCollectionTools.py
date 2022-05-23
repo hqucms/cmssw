@@ -3,6 +3,7 @@ import FWCore.ParameterSet.Config as cms
 from PhysicsTools.PatAlgos.tools.ConfigToolBase import *
 
 from CommonTools.PileupAlgos.Puppi_cff      import puppi
+from CommonTools.PileupAlgos.ABCNet_cff      import abc
 from CommonTools.PileupAlgos.softKiller_cfi import softKiller
 
 from RecoJets.JetProducers.PFJetParameters_cfi         import PFJetParameters
@@ -277,7 +278,11 @@ class RecoJetAdder(object):
         # Skip if no PU Method or CS specified
         #
         if recoJetInfo.jetPUMethod in [ "", "cs" ]:
-          pass
+          #pass
+          if recoJetInfo.jetPUMethod in [ "", "cs" ]: #if no PU Method is chosen, add ABCNetProducer to process and task
+            self.addProcessAndTask(proc, "abc", abc.clone(
+            )
+          )
         #
         # CHS
         #
@@ -345,12 +350,10 @@ class RecoJetAdder(object):
             src = pfCand,
           )
         )
-        elif jet == "ak4pfabc": #add one elif to make sure to enter in a dedicated "ABC clustering block, without spoiling the rest
+        elif jet == "ak4pfabc": #add one elif to make sure to enter in a dedicated "ABC" clustering block, without spoiling the rest
           self.addProcessAndTask(proc, jetCollection, ak4PFJets.clone(
-            src = pfCand,
-            #we want do do something like the following two lines (commented out for now)
-            #applyWeight = True,
-            #srcWeights = cms.InputTag("puppi") #this is going to be a edm::ValueMap<float> (mapping each pf candidate to an ABCNet weight), TBD
+            src = pfCand, #pfCand for ak4pfabc is 'packedPFCandidates'
+            srcWeights = cms.InputTag("abc") #this is a edm::ValueMap<float> (mapping each pf candidate to an ABCNet weight)
           )
         )
         else:

@@ -50,6 +50,7 @@ private:
   void produce(edm::Event &, const edm::EventSetup &) override;
   // tokens
   edm::EDGetTokenT<reco::CandidateView> tokenPFCandidates_;
+  edm::EDPutTokenT<edm::ValueMap<float>> ABCNetOut_;
 };
 
 //////////////////////////////////////////////////////////////////////////////////
@@ -61,7 +62,7 @@ ABCNetProducer::ABCNetProducer(const edm::ParameterSet& iConfig):
   tokenPFCandidates_(consumes<reco::CandidateView>(iConfig.getParameter<edm::InputTag>("candName")))
 {
   // Produce a ValueMap of floats linking each PF candidate with its ABCNet weight
-  produces<edm::ValueMap<float> > ();
+  ABCNetOut_ = produces<edm::ValueMap<float>> ();
 
 };
 
@@ -96,12 +97,15 @@ void ABCNetProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) 
     weights.push_back(abcweight);
   }
   
-  std::unique_ptr<edm::ValueMap<float>> ABCNetOut(new edm::ValueMap<float>());
-  edm::ValueMap<float>::Filler  ABCNetFiller(*ABCNetOut);
+  //std::unique_ptr<edm::ValueMap<float>> ABCNetOut(new edm::ValueMap<float>());
+  edm::ValueMap<float> ABCNetOut;
+  //edm::ValueMap<float>::Filler  ABCNetFiller(*ABCNetOut);
+  edm::ValueMap<float>::Filler ABCNetFiller(ABCNetOut);
   ABCNetFiller.insert(PFCandidates,weights.begin(),weights.end());
   ABCNetFiller.fill();
+  iEvent.emplace(ABCNetOut_, ABCNetOut);
+  //iEvent.put(std::move(ABCNetOut), "weights");
   
-  iEvent.put(std::move(ABCNetOut), "weights");
   
 }
 //define this as a plug-in
