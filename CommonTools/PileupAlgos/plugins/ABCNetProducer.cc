@@ -10,7 +10,7 @@
 */
 //========================================================================================
 // Authors:  Fabio Iemmi (IHEP)                                      ---------------------
-//         Created:  THU, 5 May 2022 11:00:28 GMT  ---------------------------------------
+//         Created:  MON, 23 May 2022 10:00:28 GMT  ---------------------------------------
 //========================================================================================
 
 #include "FWCore/Framework/interface/Event.h"
@@ -22,6 +22,7 @@
 #include "CommonTools/PileupAlgos/interface/PuppiCandidate.h"// for puppi candidates
 #include "DataFormats/Math/interface/LorentzVector.h"
 #include "FWCore/Framework/interface/MakerMacros.h"
+#include "PhysicsTools/TensorFlow/interface/TensorFlow.h" // to use TensorFlow
 
 #include <limits>
 #include <iostream>
