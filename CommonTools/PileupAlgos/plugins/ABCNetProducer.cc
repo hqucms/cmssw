@@ -23,6 +23,7 @@
 #include "DataFormats/Math/interface/LorentzVector.h"
 #include "FWCore/Framework/interface/MakerMacros.h"
 #include "PhysicsTools/TensorFlow/interface/TensorFlow.h" // to use TensorFlow
+#include "FWCore/Framework/interface/stream/EDAnalyzer.h"
 
 #include <limits>
 #include <iostream>
@@ -32,19 +33,29 @@
 #include <memory>
 #include <nlohmann/json.hpp>
 
+struct ABCNetTFCache {
+  ABCNetTFCache() : graphDef(nullptr) {}
+  std::atomic<tensorflow::GraphDef*> graphDef;
+};
+
+
+
 ///////////////////////////////////////////////////////////////////////////////////
 // Declaring class ----------------------------------------------------------------
 ///////////////////////////////////////////////////////////////////////////////////
 
-class ABCNetProducer : public edm::stream::EDProducer<> {
+class ABCNetProducer : public edm::stream::EDProducer<edm::GlobalCache<ABCNetTFCache>> {
 
 public:
   typedef math::XYZTLorentzVector LorentzVector;
   typedef std::vector< pat::PackedCandidate > PackedOutputCollection;
-  explicit ABCNetProducer(const edm::ParameterSet&);   
+  explicit ABCNetProducer(const edm::ParameterSet&, const ABCNetTFCache*);   
   ~ABCNetProducer();
 
   static void fillDescriptions(edm::ConfigurationDescriptions &);
+
+  static std::unique_ptr<ABCNetTFCache> initializeGlobalCache(const edm::ParameterSet&);
+  static void globalEndJob(const ABCNetTFCache*);
 
 private:
   std::unique_ptr< PackedOutputCollection > fPackedPuppiCandidates;
@@ -59,7 +70,7 @@ private:
 //////////////////////////////////////////////////////////////////////////////////
 
 // constructors
-ABCNetProducer::ABCNetProducer(const edm::ParameterSet& iConfig):
+ABCNetProducer::ABCNetProducer(const edm::ParameterSet& iConfig, const ABCNetTFCache* cache):
   tokenPFCandidates_(consumes<reco::CandidateView>(iConfig.getParameter<edm::InputTag>("candName")))
 {
   // Produce a ValueMap of floats linking each PF candidate with its ABCNet weight
@@ -72,6 +83,22 @@ ABCNetProducer::~ABCNetProducer() {
 };
 
 void ABCNetProducer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {};
+
+std::unique_ptr<ABCNetTFCache> ABCNetProducer::initializeGlobalCache(const edm::ParameterSet& iConfig) {
+  tensorflow::setLogging("3");
+  // get the pb file
+  std::string pbFile = iConfig.getParameter<edm::FileInPath>("graph_path").fullPath();
+  // load the graph definition and save it in the cache
+  ABCNetTFCache* cache = new ABCNetTFCache();
+  cache->graphDef = tensorflow::loadGraphDef(pbFile);
+  return std::unique_ptr<ABCNetTFCache>(cache);
+};
+
+void ABCNetProducer::globalEndJob(const ABCNetTFCache* cache) {
+  if (cache->graphDef != nullptr) {
+    delete cache->graphDef;
+  }
+};
 
 void ABCNetProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
   std::cout << "I AM ABCNET PRODUCER, I AM PRODUCING" << std::endl;
