@@ -94,7 +94,14 @@ config_recojets = [
     "genJetsCollection": "AK4GenJetsNoNu",
     "bTagDiscriminators": bTagDiscriminatorsForAK4,
     "minPtFastjet" : 0.,
-  }, 
+  },
+  { 
+    "jet" : "ak4pfabc",
+    "enabled" : True,
+    "inputCollection" : "",
+    "genJetsCollection": "AK4GenJetsNoNu",
+    "minPtFastjet" : 0.,
+  },
   { 
     "jet" : "ak8pf",
     "enabled" : False,
@@ -124,6 +131,11 @@ nanoInfo_recojets = {
     "doQGL" : True,
     "doPUIDVar": True,
     "doBTag": True,
+  },
+  "ak4pfabc" : {
+    "name"  : "JetABC",
+    "doc"   : "AK4 PF ABC",
+    "ptcut" : "",
   },
   "ak8pf" : {
     "name"  : "FatJetPF",
