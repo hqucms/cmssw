@@ -92,6 +92,8 @@ private:
   edm::EDGetTokenT<reco::CandidateView> tokenPFCandidates_;
   std::vector<std::string> input_names_; //names of the input features. Ordering matters!
   std::unordered_map<std::string, PreprocessParams> prep_info_map_;  //preprocessing info for each input feature
+  //session for TF evaluation
+  tensorflow::Session* session_;
   constexpr static unsigned max_num_PFCandidates = 4000;
   
   edm::EDPutTokenT<edm::ValueMap<float>> ABCNetOut_;
@@ -103,7 +105,8 @@ private:
 
 // constructors
 ABCNetProducer::ABCNetProducer(const edm::ParameterSet& iConfig, const ABCNetTFCache* cache):
-  tokenPFCandidates_(consumes<reco::CandidateView>(iConfig.getParameter<edm::InputTag>("candName")))
+  tokenPFCandidates_(consumes<reco::CandidateView>(iConfig.getParameter<edm::InputTag>("candName"))),
+  session_(nullptr)
 {
   std::ifstream ifs(iConfig.getParameter<edm::FileInPath>("preprocess_json").fullPath());
   nlohmann::json js = nlohmann::json::parse(ifs);
@@ -120,6 +123,9 @@ ABCNetProducer::ABCNetProducer(const edm::ParameterSet& iConfig, const ABCNetTFC
     prep_params.var_info_map[input_name] = PreprocessParams::VarInfo(upper_bound, lower_bound, norm_factor, replace_nan_value, pad_value);
   }
   
+  //create the TF session using the meta graph from the cache
+  session_ = tensorflow::createSession(cache->graphDef);
+
   // Produce a ValueMap of floats linking each PF candidate with its ABCNet weight
   ABCNetOut_ = produces<edm::ValueMap<float>> ();
 
