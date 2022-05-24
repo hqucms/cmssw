@@ -41,15 +41,17 @@ using namespace abcnet;
 struct PreprocessParams {
   struct VarInfo {
     VarInfo() {}
-    VarInfo(float upper_bound, float lower_bound, float norm_factor, float replace_nan_value)
+    VarInfo(float upper_bound, float lower_bound, float norm_factor, float replace_nan_value, float pad_value)
       : upper_bound(upper_bound),
         lower_bound(lower_bound),
 	norm_factor(norm_factor),
-	replace_nan_value(replace_nan_value) {}
+	replace_nan_value(replace_nan_value),
+	pad_value(pad_value) {}
     float upper_bound = 100000;
     float lower_bound = -100000;
     float norm_factor = 1;
     float replace_nan_value = 0;
+    float pad_value = 0;
   };
 
   std::vector<std::string> var_names;
@@ -85,7 +87,7 @@ private:
   std::unique_ptr< PackedOutputCollection > fPackedPuppiCandidates;
   void produce(edm::Event &, const edm::EventSetup &) override;
   std::vector<float> minmax_scale(const std::vector<float> &input, float upper_bound = 100000, float lower_bound = 100000, float norm_factor = 1, float pad_value = 0, float replace_nan_value = 0);
-  void preprocess(std::unordered_map<std::string, std::vector<float>> &taginfo);
+  void preprocess(std::unordered_map<std::string, std::vector<float>> &featureMap);
   // tokens
   edm::EDGetTokenT<reco::CandidateView> tokenPFCandidates_;
   std::vector<std::string> input_names_; //names of the input features. Ordering matters!
@@ -113,8 +115,9 @@ ABCNetProducer::ABCNetProducer(const edm::ParameterSet& iConfig, const ABCNetTFC
     double lower_bound = var_pset.at("lower_bound");
     double norm_factor = var_pset.at("norm_factor");
     double replace_nan_value = var_pset.at("replace_nan_value");
+    double pad_value = var_pset.at("pad_value");
     auto &prep_params = prep_info_map_[input_name];
-    prep_params.var_info_map[input_name] = PreprocessParams::VarInfo(upper_bound, lower_bound, norm_factor, replace_nan_value);
+    prep_params.var_info_map[input_name] = PreprocessParams::VarInfo(upper_bound, lower_bound, norm_factor, replace_nan_value, pad_value);
   }
   
   // Produce a ValueMap of floats linking each PF candidate with its ABCNet weight
