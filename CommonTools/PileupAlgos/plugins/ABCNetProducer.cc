@@ -94,6 +94,8 @@ private:
   std::unordered_map<std::string, PreprocessParams> prep_info_map_;  //preprocessing info for each input feature
   //session for TF evaluation
   tensorflow::Session* session_;
+  std::string input_tensor_name_;
+  std::string output_tensor_name_;
   constexpr static unsigned max_num_PFCandidates = 4000;
   
   edm::EDPutTokenT<edm::ValueMap<float>> ABCNetOut_;
@@ -106,7 +108,9 @@ private:
 // constructors
 ABCNetProducer::ABCNetProducer(const edm::ParameterSet& iConfig, const ABCNetTFCache* cache):
   tokenPFCandidates_(consumes<reco::CandidateView>(iConfig.getParameter<edm::InputTag>("candName"))),
-  session_(nullptr)
+  session_(nullptr),
+  input_tensor_name_(iConfig.getParameter<std::string>("input_tensor_name")),
+  output_tensor_name_(iConfig.getParameter<std::string>("output_tensor_name"))
 {
   std::ifstream ifs(iConfig.getParameter<edm::FileInPath>("preprocess_json").fullPath());
   nlohmann::json js = nlohmann::json::parse(ifs);
@@ -192,6 +196,11 @@ void ABCNetProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) 
     }
   }
 
+  std::vector<tensorflow::Tensor> outputs;
+  tensorflow::run(session_, { { input_tensor_name_, inputs } }, { output_tensor_name_ }, &outputs);
+  //std::cout << "PRINTING NETWORK OUTPUTS" << std::endl;
+  //std::cout << outputs[0].matrix<float>()(0, 0, 20) << std::endl;
+  
   //initialize container for ABCNet weights
   std::vector<float> weights;
   //throw random numbers in [0,1] as ABCNet weights for now
