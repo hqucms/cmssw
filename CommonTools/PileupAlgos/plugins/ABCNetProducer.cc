@@ -85,6 +85,7 @@ private:
   std::unique_ptr< PackedOutputCollection > fPackedPuppiCandidates;
   void produce(edm::Event &, const edm::EventSetup &) override;
   std::vector<float> minmax_scale(const std::vector<float> &input, float upper_bound = 100000, float lower_bound = 100000, float norm_factor = 1, float pad_value = 0, float replace_nan_value = 0);
+  void preprocess(std::unordered_map<std::string, std::vector<float>> &taginfo);
   // tokens
   edm::EDGetTokenT<reco::CandidateView> tokenPFCandidates_;
   std::vector<std::string> input_names_; //names of the input features. Ordering matters!
@@ -156,6 +157,14 @@ std::vector<float> ABCNetProducer::minmax_scale(const std::vector<float> &input,
   return out;
 };
 
+void ABCNetProducer::preprocess(std::unordered_map<std::string, std::vector<float>> & featureMap) {
+
+  for (auto & element : featureMap) { //do not declare 'auto const', want to manipulate the element
+    element.second.resize(max_num_PFCandidates, 0.0); //truncate or zero-pad feature vectors (just for now, will do it through minmax_scale in the future)
+  }
+
+};
+
 void ABCNetProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
 
   // Get PFCandidate Collection
@@ -163,7 +172,8 @@ void ABCNetProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) 
   iEvent.getByToken(tokenPFCandidates_, PFCandidates);
   const reco::CandidateView *pfCol = PFCandidates.product();
   auto features = ABCNetMakeInputs::makeFeatureMap(pfCol, false);
-
+  ABCNetProducer::preprocess(features);
+  
   //initialize container for ABCNet weights
   std::vector<float> weights;
   //throw random numbers in [0,1] as ABCNet weights for now
