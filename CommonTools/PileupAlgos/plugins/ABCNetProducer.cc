@@ -183,6 +183,15 @@ void ABCNetProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) 
   auto features = ABCNetMakeInputs::makeFeatureMap(pfCol, false);
   ABCNetProducer::preprocess(features);
   
+  //fill the input tensor
+  tensorflow::Tensor inputs (tensorflow::DT_FLOAT, { 1, 4000, 19 });
+  inputs.flat<float>().setZero();
+  for (int j = 0; j < 19; j++) { //may need to find better solution than hard-coding 19
+    for (int i = 0; i < 4000; i++) { //may need to find better solution than hard-coding 4000
+      inputs.tensor<float,3>()(0,i,j) = float(features[input_names_.at(j)].at(i)); //looks suboptimal; is there way of filling the tensor avoiding nested loops?
+    }
+  }
+
   //initialize container for ABCNet weights
   std::vector<float> weights;
   //throw random numbers in [0,1] as ABCNet weights for now
