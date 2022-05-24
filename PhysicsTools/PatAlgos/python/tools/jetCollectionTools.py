@@ -353,6 +353,7 @@ class RecoJetAdder(object):
         elif jet == "ak4pfabc": #add one elif to make sure to enter in a dedicated "ABC" clustering block, without spoiling the rest
           self.addProcessAndTask(proc, jetCollection, ak4PFJets.clone(
             src = pfCand, #pfCand for ak4pfabc is 'packedPFCandidates'
+            applyWeight = True,
             srcWeights = cms.InputTag("abc") #this is a edm::ValueMap<float> (mapping each pf candidate to an ABCNet weight)
           )
         )
