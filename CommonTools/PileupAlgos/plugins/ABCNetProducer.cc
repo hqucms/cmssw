@@ -77,6 +77,8 @@ private:
 ABCNetProducer::ABCNetProducer(const edm::ParameterSet& iConfig, const ABCNetTFCache* cache):
   tokenPFCandidates_(consumes<reco::CandidateView>(iConfig.getParameter<edm::InputTag>("candName")))
 {
+  std::ifstream ifs(iConfig.getParameter<edm::FileInPath>("preprocess_json").fullPath());
+
   // Produce a ValueMap of floats linking each PF candidate with its ABCNet weight
   ABCNetOut_ = produces<edm::ValueMap<float>> ();
 
