@@ -423,6 +423,11 @@ class RecoJetAdder(object):
       #
       if recoJetInfo.jetPUMethod == "puppi":
         getattr(proc, "patJetFlavourAssociation{}{}".format(jetUpper,postfix)).weights = cms.InputTag(pfCand)
+      #
+      # Need to set this explicitly for ABC jets
+      #
+      if jet == "ak4pfabc":
+        getattr(proc, "patJetFlavourAssociation{}{}".format(jetUpper,postfix)).weights = cms.InputTag("abc")
 
       getJetMCFlavour = not recoJetInfo.doCalo and recoJetInfo.jetPUMethod != "cs"
       if not self.runOnMC: #Remove modules for Gen-level object matching
