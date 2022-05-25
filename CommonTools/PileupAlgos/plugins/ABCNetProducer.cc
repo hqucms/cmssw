@@ -73,8 +73,6 @@ struct ABCNetTFCache {
 class ABCNetProducer : public edm::stream::EDProducer<edm::GlobalCache<ABCNetTFCache>> {
 
 public:
-  typedef math::XYZTLorentzVector LorentzVector;
-  typedef std::vector< pat::PackedCandidate > PackedOutputCollection;
   explicit ABCNetProducer(const edm::ParameterSet&, const ABCNetTFCache*);   
   ~ABCNetProducer();
 
@@ -84,9 +82,14 @@ public:
   static void globalEndJob(const ABCNetTFCache*);
 
 private:
-  std::unique_ptr< PackedOutputCollection > fPackedPuppiCandidates;
   void produce(edm::Event &, const edm::EventSetup &) override;
-  std::vector<float> minmax_scale(const std::vector<float> &input, float upper_bound = 100000, float lower_bound = 100000, float norm_factor = 1, float pad_value = 0, float replace_nan_value = 0);
+  std::vector<float> minmax_scale(const std::vector<float> &input,
+				  float upper_bound = 100000,
+				  float lower_bound = 100000,
+				  float norm_factor = 1,
+				  float pad_value = 0,
+				  float replace_nan_value = 0
+				  );
   void preprocess(std::unordered_map<std::string, std::vector<float>> &featureMap);
   // tokens
   edm::EDGetTokenT<reco::CandidateView> tokenPFCandidates_;
@@ -112,10 +115,12 @@ ABCNetProducer::ABCNetProducer(const edm::ParameterSet& iConfig, const ABCNetTFC
   input_tensor_name_(iConfig.getParameter<std::string>("input_tensor_name")),
   output_tensor_name_(iConfig.getParameter<std::string>("output_tensor_name"))
 {
+  //parse data from preprocessing JSON file
   std::ifstream ifs(iConfig.getParameter<edm::FileInPath>("preprocess_json").fullPath());
   nlohmann::json js = nlohmann::json::parse(ifs);
   js.at("input_names").get_to(input_names_); //store names of input features from JSON inside input_names_
   const auto &var_info_pset = js.at("var_info"); //get the var_info block from JSON
+  
   for (const auto & input_name : input_names_) {
     const auto &var_pset = var_info_pset.at(input_name);
     double upper_bound = var_pset.at("upper_bound");
@@ -124,7 +129,12 @@ ABCNetProducer::ABCNetProducer(const edm::ParameterSet& iConfig, const ABCNetTFC
     double replace_nan_value = var_pset.at("replace_nan_value");
     double pad_value = var_pset.at("pad_value");
     auto &prep_params = prep_info_map_[input_name];
-    prep_params.var_info_map[input_name] = PreprocessParams::VarInfo(upper_bound, lower_bound, norm_factor, replace_nan_value, pad_value);
+    prep_params.var_info_map[input_name] = PreprocessParams::VarInfo(upper_bound,
+								     lower_bound,
+								     norm_factor,
+								     replace_nan_value,
+								     pad_value
+								     );
   }
   
   //create the TF session using the meta graph from the cache
@@ -157,7 +167,13 @@ void ABCNetProducer::globalEndJob(const ABCNetTFCache* cache) {
   }
 };
 
-std::vector<float> ABCNetProducer::minmax_scale(const std::vector<float> &input, float upper_bound, float lower_bound, float norm_factor, float pad_value, float replace_nan_value) {
+std::vector<float> ABCNetProducer::minmax_scale(const std::vector<float> &input,
+						float upper_bound,
+						float lower_bound,
+						float norm_factor,
+						float pad_value,
+						float replace_nan_value
+						) {
   unsigned target_length = std::clamp((unsigned)input.size(), max_num_PFCandidates, max_num_PFCandidates);
   std::vector<float> out(target_length, pad_value);
   for (unsigned i = 0; i < input.size() && i < target_length; ++i) {
@@ -176,7 +192,13 @@ void ABCNetProducer::preprocess(std::unordered_map<std::string, std::vector<floa
     //std::cout << input_name << std::endl;
     const auto & preprocessing_params = prep_info_map_[input_name].var_info_map[input_name];
     //std::cout << preprocessing_params.upper_bound << std::endl;
-    featureMap[input_name] = minmax_scale(featureMap[input_name], preprocessing_params.upper_bound, preprocessing_params.lower_bound, preprocessing_params.norm_factor, preprocessing_params.pad_value, preprocessing_params.replace_nan_value);
+    featureMap[input_name] = minmax_scale(featureMap[input_name],
+					  preprocessing_params.upper_bound,
+					  preprocessing_params.lower_bound,
+					  preprocessing_params.norm_factor,
+					  preprocessing_params.pad_value,
+					  preprocessing_params.replace_nan_value
+					  );
   }
 
 };
