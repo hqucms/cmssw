@@ -172,8 +172,11 @@ std::vector<float> ABCNetProducer::minmax_scale(const std::vector<float> &input,
 
 void ABCNetProducer::preprocess(std::unordered_map<std::string, std::vector<float>> & featureMap) {
 
-  for (auto & element : featureMap) { //do not declare 'auto const', want to manipulate the element
-    element.second.resize(max_num_PFCandidates, 0.0); //truncate or zero-pad feature vectors (just for now, will do it through minmax_scale in the future)
+  for (const auto & input_name : input_names_) {
+    //std::cout << input_name << std::endl;
+    const auto & preprocessing_params = prep_info_map_[input_name].var_info_map[input_name];
+    //std::cout << preprocessing_params.upper_bound << std::endl;
+    featureMap[input_name] = minmax_scale(featureMap[input_name], preprocessing_params.upper_bound, preprocessing_params.lower_bound, preprocessing_params.norm_factor, preprocessing_params.pad_value, preprocessing_params.replace_nan_value);
   }
 
 };
@@ -184,6 +187,8 @@ void ABCNetProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) 
   edm::Handle<reco::CandidateView> PFCandidates;
   iEvent.getByToken(tokenPFCandidates_, PFCandidates);
   const reco::CandidateView *pfCol = PFCandidates.product();
+  
+  //make feature map and preprocess features
   auto features = ABCNetMakeInputs::makeFeatureMap(pfCol, false);
   ABCNetProducer::preprocess(features);
   
@@ -195,11 +200,11 @@ void ABCNetProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) 
       inputs.tensor<float,3>()(0,i,j) = float(features[input_names_.at(j)].at(i)); //looks suboptimal; is there way of filling the tensor avoiding nested loops?
     }
   }
-
+  
   std::vector<tensorflow::Tensor> outputs;
   tensorflow::run(session_, { { input_tensor_name_, inputs } }, { output_tensor_name_ }, &outputs);
   //std::cout << "PRINTING NETWORK OUTPUTS" << std::endl;
-  //std::cout << outputs[0].matrix<float>()(0, 0, 20) << std::endl;
+  //for (int i = 0; i < 4000; i++) std::cout << outputs.at(0).tensor<float,3>()(0, i, 19) << " ";
   
   //initialize container for ABCNet weights
   std::vector<float> weights;
