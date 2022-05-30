@@ -22,7 +22,14 @@ template <typename A, typename B> void unzip( const std::vector<std::pair<A, B>>
   }
 }
 
-std::unordered_map<std::string, std::vector<float>> ABCNetMakeInputs::makeFeatureMap (const reco::CandidateView * pfCol, bool debug) {
+template <typename A> std::vector<size_t> get_indices(const std::vector<A> & v) {
+  std::vector<size_t> idx(v.size());
+  std::iota(idx.begin(), idx.end(), 0);
+  stable_sort(idx.begin(), idx.end(), [&v](size_t i1, size_t i2) {return v[i1] < v[i2];});
+  return idx;
+}
+
+std::unordered_map<std::string, std::vector<float>> ABCNetMakeInputs::makeFeatureMap (const reco::CandidateView * pfCol, std::vector<size_t> & indices, bool debug) {
   
   //store PF candidates and their pts into vectors
   //sort the PF candidates based on their pt
@@ -35,11 +42,14 @@ std::unordered_map<std::string, std::vector<float>> ABCNetMakeInputs::makeFeatur
     Pts.push_back(lPack->pt());
   } // end loop over PF candidates
 
+  //get indices mapping unsorted to sorted PF candidates
+  indices = get_indices(Pts);
+  
   //zip the vectors
   std::vector<std::pair<pat::PackedCandidate,float>> zipped_vec;
   zip(PFCands, Pts, zipped_vec);
   // Sort the vector of pairs
-  std::sort(std::begin(zipped_vec), std::end(zipped_vec), [&](const auto& a, const auto& b) { return a.second > b.second; });
+  std::stable_sort(std::begin(zipped_vec), std::end(zipped_vec), [&](const auto& a, const auto& b) { return a.second > b.second; });
   // Write the sorted pairs back to the original vectors
   unzip(zipped_vec, PFCands, Pts);
   
