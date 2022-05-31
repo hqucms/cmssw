@@ -22,10 +22,13 @@ template <typename A, typename B> void unzip( const std::vector<std::pair<A, B>>
   }
 }
 
-template <typename A> std::vector<size_t> get_indices(const std::vector<A> & v) {
-  std::vector<size_t> idx(v.size());
-  std::iota(idx.begin(), idx.end(), 0);
-  stable_sort(idx.begin(), idx.end(), [&v](size_t i1, size_t i2) {return v[i1] < v[i2];});
+template <typename A> std::vector<size_t> get_indices(std::vector<A> & v1, std::vector<A> & v2) {
+  std::vector<size_t> idx;
+  for (auto const & element : v1) {
+    //is the following suboptimal and/or slow? Can't we find a better way?
+    typename std::vector<A>::iterator itr = std::find(v2.begin(), v2.end(), element);
+      idx.push_back(std::distance(v2.begin(), itr));
+  }
   return idx;
 }
 
@@ -41,18 +44,20 @@ std::unordered_map<std::string, std::vector<float>> ABCNetMakeInputs::makeFeatur
     PFCands.push_back(*lPack);
     Pts.push_back(lPack->pt());
   } // end loop over PF candidates
-
-  //get indices mapping unsorted to sorted PF candidates
-  indices = get_indices(Pts);
   
+  //copy Pts and sort the copy
+  std::vector<float> Pts_sorted(Pts); 
   //zip the vectors
   std::vector<std::pair<pat::PackedCandidate,float>> zipped_vec;
-  zip(PFCands, Pts, zipped_vec);
+  zip(PFCands, Pts_sorted, zipped_vec);
   // Sort the vector of pairs
   std::stable_sort(std::begin(zipped_vec), std::end(zipped_vec), [&](const auto& a, const auto& b) { return a.second > b.second; });
   // Write the sorted pairs back to the original vectors
-  unzip(zipped_vec, PFCands, Pts);
+  unzip(zipped_vec, PFCands, Pts_sorted);
   
+  //get indices mapping unsorted and sorted PF candidates
+  indices = get_indices(Pts, Pts_sorted);
+
   //fill feature map
   std::unordered_map<std::string, std::vector<float>> fts;
   for (auto const & aPF : PFCands) {
