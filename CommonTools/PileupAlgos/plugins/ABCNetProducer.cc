@@ -232,9 +232,10 @@ void ABCNetProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) 
   //initialize container for ABCNet weights
   std::vector<float> weights;
   //throw random numbers in [0,1] as ABCNet weights for now
-  srand(100);
+  //srand(100);
  
-  for(auto const& aPF : *pfCol) {  
+  int PFCounter = 0;
+  for(auto const& aPF : *pfCol) {
     const pat::PackedCandidate *lPack = dynamic_cast<const pat::PackedCandidate*>(&aPF);
     float abcweight = -1.;
     if(lPack == nullptr) { 
@@ -242,9 +243,13 @@ void ABCNetProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) 
       throw edm::Exception(edm::errors::LogicError,"ABCNetProducer: cannot get weights since inputs are not PackedCandidates");
     }
     else{
-      abcweight = (float) rand()/RAND_MAX;
+      if (indices.at(PFCounter) >= 4000) { //if the particle wasn't considered in evaluation, assign 0 weight
+	abcweight = 0.0;
+      }
+      else abcweight = outputs.at(0).tensor<float,3>()(0, indices.at(PFCounter), 19);
     }
     weights.push_back(abcweight);
+    PFCounter++;
   }
 
   //std::unique_ptr<edm::ValueMap<float>> ABCNetOut(new edm::ValueMap<float>());
