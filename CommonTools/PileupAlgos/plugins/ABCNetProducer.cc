@@ -177,10 +177,12 @@ std::vector<float> ABCNetProducer::minmax_scale(const std::vector<float> &input,
   unsigned target_length = std::clamp((unsigned)input.size(), max_num_PFCandidates, max_num_PFCandidates);
   std::vector<float> out(target_length, pad_value);
   for (unsigned i = 0; i < input.size() && i < target_length; ++i) {
+    //first of all, check if input is inf/nan and replace it if needed
     auto val = std::isfinite(input[i]) ? input[i] : replace_nan_value;
     val = std::isnan(input[i]) ? replace_nan_value : input[i];
-    val = (input[i]>upper_bound) ? upper_bound : input[i];
-    val = (input[i]<lower_bound) ? lower_bound : input[i];
+    //second of all, perform the actual min-max scaling
+    val = (val>upper_bound) ? upper_bound : val;
+    val = (val<lower_bound) ? lower_bound : val;
     out[i] = val/norm_factor; //need to check this value
   }
   return out;
