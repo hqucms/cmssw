@@ -61,7 +61,6 @@ std::unordered_map<std::string, std::vector<float>> ABCNetMakeInputs::makeFeatur
   //fill feature map
   std::unordered_map<std::string, std::vector<float>> fts;
   for (auto const & aPF : PFCands) {
-      
     fts["PFCandEta"].push_back(aPF.eta()); //f0
     fts["PFCandPhi"].push_back(aPF.phi()); //f1
     fts["PFCandLogPt"].push_back(log(aPF.pt())); //f2
@@ -92,7 +91,11 @@ std::unordered_map<std::string, std::vector<float>> ABCNetMakeInputs::makeFeatur
     if (aPF.pdgId() == 130 || aPF.pdgId() == 1) fts["PFCandHCalFrac"].push_back(aPF.hcalFraction()); else if (aPF.isIsolatedChargedHadron()) fts["PFCandHCalFrac"].push_back(aPF.rawHcalFraction()); else fts["PFCandHCalFrac"].push_back(0.0); //f12
     
   }
-
+  if (debug) {
+    std::cout << "*** NOW CHECKING THE SORTING OF PF CANDIDATES ***" << std::endl;
+    if ( !std::is_sorted(fts["PFCandLogPt"].begin(), fts["PFCandLogPt"].end(), std::greater<float>() ) ) std::cout << "*** WARNING *** PFCandidates are not sorted in Pt!!!" << std::endl;
+    else std::cout << "No issues with the sorting of PF candidates detected" << std::endl;
+  }
   return fts;
 
 };

@@ -99,6 +99,7 @@ private:
   tensorflow::Session* session_;
   std::string input_tensor_name_;
   std::string output_tensor_name_;
+  bool debug_;
   constexpr static unsigned max_num_PFCandidates = 4000;
   
   edm::EDPutTokenT<edm::ValueMap<float>> ABCNetOut_;
@@ -113,7 +114,8 @@ ABCNetProducer::ABCNetProducer(const edm::ParameterSet& iConfig, const ABCNetTFC
   tokenPFCandidates_(consumes<reco::CandidateView>(iConfig.getParameter<edm::InputTag>("candName"))),
   session_(nullptr),
   input_tensor_name_(iConfig.getParameter<std::string>("input_tensor_name")),
-  output_tensor_name_(iConfig.getParameter<std::string>("output_tensor_name"))
+  output_tensor_name_(iConfig.getParameter<std::string>("output_tensor_name")),
+  debug_(iConfig.getParameter<bool>("debug"))
 {
   //parse data from preprocessing JSON file
   std::ifstream ifs(iConfig.getParameter<edm::FileInPath>("preprocess_json").fullPath());
@@ -204,17 +206,22 @@ void ABCNetProducer::preprocess(std::unordered_map<std::string, std::vector<floa
   }
   
   if(debug) {
-    std::cout << "NOW CHECKING THE SANITY OF THE PREPROCESSING STEP" << std::endl;
+    std::cout << "*** NOW CHECKING THE SANITY OF THE PREPROCESSING STEP ***" << std::endl;
     for(auto const & feat : featureMap) {
+      bool issue = false;
       std::cout << feat.first << std::endl;
       if (feat.first == "PFCandEta" || feat.first == "PFCandPhi" || feat.first == "PFCandLogPt" || feat.first == "PFCandLogE" || feat.first == "PFCandCharge") {
-	std::cout << "This feature is expected to lay outside 0;1 interval. Skipping..." << std::endl;
+	std::cout << "This feature is expected to take values outside [-1;1] interval. Skipping..." << std::endl;
 	continue;
       } 
       for (auto const & element : feat.second) {
-	if (element < -1 || element > 1) std::cout << "Found element with value " << element << " ";
+	if (element < -1 || element > 1) {
+	  std::cout << "*** WARNING *** Found element with value outside [-1;1] interval" << std::endl;
+	  issue = true;
+	  break;
+	}
       }
-      std::cout << " " << std::endl;
+      if (!issue) std::cout << "No issues with input feature detected" << std::endl;
     }
   }
   
@@ -229,8 +236,8 @@ void ABCNetProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) 
   
   //make feature map and preprocess features
   std::vector<size_t> indices; 
-  auto features = ABCNetMakeInputs::makeFeatureMap(pfCol, indices, false);
-  ABCNetProducer::preprocess(features, true);
+  auto features = ABCNetMakeInputs::makeFeatureMap(pfCol, indices, debug_);
+  ABCNetProducer::preprocess(features, debug_);
   
   //fill the input tensor
   tensorflow::Tensor inputs (tensorflow::DT_FLOAT, { 1, 4000, 19 });
