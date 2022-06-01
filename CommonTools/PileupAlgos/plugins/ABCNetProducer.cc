@@ -99,8 +99,9 @@ private:
   tensorflow::Session* session_;
   std::string input_tensor_name_;
   std::string output_tensor_name_;
+  int n_pf_cands_;
+  int n_feats_;
   bool debug_;
-  constexpr static unsigned max_num_PFCandidates = 4000;
   
   edm::EDPutTokenT<edm::ValueMap<float>> ABCNetOut_;
 };
@@ -115,6 +116,8 @@ ABCNetProducer::ABCNetProducer(const edm::ParameterSet& iConfig, const ABCNetTFC
   session_(nullptr),
   input_tensor_name_(iConfig.getParameter<std::string>("input_tensor_name")),
   output_tensor_name_(iConfig.getParameter<std::string>("output_tensor_name")),
+  n_pf_cands_(iConfig.getParameter<int>("n_pf_cands")),
+  n_feats_(iConfig.getParameter<int>("n_feats")),
   debug_(iConfig.getParameter<bool>("debug"))
 {
   //parse data from preprocessing JSON file
@@ -176,7 +179,7 @@ std::vector<float> ABCNetProducer::minmax_scale(const std::vector<float> &input,
 						float pad_value,
 						float replace_nan_value
 						) {
-  unsigned target_length = std::clamp((unsigned)input.size(), max_num_PFCandidates, max_num_PFCandidates);
+  unsigned target_length = std::clamp((unsigned)input.size(), (unsigned)n_pf_cands_, (unsigned)n_pf_cands_);
   std::vector<float> out(target_length, pad_value);
   for (unsigned i = 0; i < input.size() && i < target_length; ++i) {
     //first of all, check if input is inf/nan and replace it if needed
@@ -240,10 +243,10 @@ void ABCNetProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) 
   ABCNetProducer::preprocess(features, debug_);
   
   //fill the input tensor
-  tensorflow::Tensor inputs (tensorflow::DT_FLOAT, { 1, 4000, 19 });
+  tensorflow::Tensor inputs (tensorflow::DT_FLOAT, { 1, n_pf_cands_, n_feats_ });
   inputs.flat<float>().setZero();
-  for (int j = 0; j < 19; j++) { //may need to find better solution than hard-coding 19
-    for (int i = 0; i < 4000; i++) { //may need to find better solution than hard-coding 4000
+  for (int j = 0; j < n_feats_; j++) {
+    for (int i = 0; i < n_pf_cands_; i++) {
       inputs.tensor<float,3>()(0,i,j) = float(features[input_names_.at(j)].at(i)); //looks suboptimal; is there way of filling the tensor avoiding nested loops?
     }
   }
@@ -251,7 +254,7 @@ void ABCNetProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) 
   std::vector<tensorflow::Tensor> outputs;
   tensorflow::run(session_, { { input_tensor_name_, inputs } }, { output_tensor_name_ }, &outputs);
   //std::cout << "PRINTING NETWORK OUTPUTS" << std::endl;
-  //for (int i = 0; i < 4000; i++) std::cout << outputs.at(0).tensor<float,3>()(0, i, 19) << " ";
+  //for (int i = 0; i < n_pf_cands_; i++) std::cout << outputs.at(0).tensor<float,3>()(0, i, n_feats_) << " ";
   
   //initialize container for ABCNet weights
   std::vector<float> weights;
@@ -267,10 +270,10 @@ void ABCNetProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) 
       throw edm::Exception(edm::errors::LogicError,"ABCNetProducer: cannot get weights since inputs are not PackedCandidates");
     }
     else{
-      if (indices.at(PFCounter) >= 4000) { //if the particle wasn't considered in evaluation, assign 0 weight
+      if (indices.at(PFCounter) >= (unsigned)n_pf_cands_) { //if the particle wasn't considered in evaluation, assign 0 weight
 	abcweight = 0.0;
       }
-      else abcweight = outputs.at(0).tensor<float,3>()(0, indices.at(PFCounter), 19);
+      else abcweight = outputs.at(0).tensor<float,3>()(0, indices.at(PFCounter), n_feats_);
     }
     weights.push_back(abcweight);
     PFCounter++;

@@ -6,5 +6,7 @@ abc = cms.EDProducer("ABCNetProducer",
                      preprocess_json = cms.FileInPath("CommonTools/PileupAlgos/plugins/preprocessing_info.json"),
                      input_tensor_name = cms.string("input_1"),
                      output_tensor_name = cms.string("Identity"),
+                     n_pf_cands = cms.int32(4000),
+                     n_feats = cms.int32(19),
                      debug = cms.bool(False)
 )
