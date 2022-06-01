@@ -90,7 +90,7 @@ private:
 				  float pad_value = 0,
 				  float replace_nan_value = 0
 				  );
-  void preprocess(std::unordered_map<std::string, std::vector<float>> &featureMap);
+  void preprocess(std::unordered_map<std::string, std::vector<float>> &featureMap, bool debug);
   // tokens
   edm::EDGetTokenT<reco::CandidateView> tokenPFCandidates_;
   std::vector<std::string> input_names_; //names of the input features. Ordering matters!
@@ -186,7 +186,7 @@ std::vector<float> ABCNetProducer::minmax_scale(const std::vector<float> &input,
   return out;
 };
 
-void ABCNetProducer::preprocess(std::unordered_map<std::string, std::vector<float>> & featureMap) {
+void ABCNetProducer::preprocess(std::unordered_map<std::string, std::vector<float>> & featureMap, bool debug) {
 
   for (const auto & input_name : input_names_) {
     //std::cout << input_name << std::endl;
@@ -200,7 +200,22 @@ void ABCNetProducer::preprocess(std::unordered_map<std::string, std::vector<floa
 					  preprocessing_params.replace_nan_value
 					  );
   }
-
+  
+  if(debug) {
+    std::cout << "NOW CHECKING THE SANITY OF THE PREPROCESSING STEP" << std::endl;
+    for(auto const & feat : featureMap) {
+      std::cout << feat.first << std::endl;
+      if (feat.first == "PFCandEta" || feat.first == "PFCandPhi" || feat.first == "PFCandLogPt" || feat.first == "PFCandLogE" || feat.first == "PFCandCharge") {
+	std::cout << "This feature is expected to lay outside 0;1 interval. Skipping..." << std::endl;
+	continue;
+      } 
+      for (auto const & element : feat.second) {
+	if (element < -1 || element > 1) std::cout << "Found element with value " << element << " ";
+      }
+      std::cout << " " << std::endl;
+    }
+  }
+  
 };
 
 void ABCNetProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
@@ -213,7 +228,7 @@ void ABCNetProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) 
   //make feature map and preprocess features
   std::vector<size_t> indices; 
   auto features = ABCNetMakeInputs::makeFeatureMap(pfCol, indices, false);
-  ABCNetProducer::preprocess(features);
+  ABCNetProducer::preprocess(features, true);
   
   //fill the input tensor
   tensorflow::Tensor inputs (tensorflow::DT_FLOAT, { 1, 4000, 19 });
