@@ -382,6 +382,10 @@ class RecoJetAdder(object):
       #
       # Jet correction 
       #
+      
+      if jet == "ak4pfabc":
+        JETCorrLevels = []
+      
       if recoJetInfo.jetPUMethod == "puppi":
         jetCorrLabel = "Puppi"
       elif recoJetInfo.jetPUMethod in [ "cs", "sk" ]:
