@@ -86,7 +86,19 @@ ABCNetProducer::ABCNetProducer(const edm::ParameterSet& iConfig, const ABCNetTFC
 ABCNetProducer::~ABCNetProducer() {
 };
 
-void ABCNetProducer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {};
+void ABCNetProducer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
+  edm::ParameterSetDescription desc;
+  desc.add<edm::InputTag>("candName", edm::InputTag("packedPFCandidates"));
+  desc.add<edm::FileInPath>("graph_path", edm::FileInPath("CommonTools/PileupAlgos/plugins/AttentionBasedPileupRejectionModel_Run2.pb"));
+  desc.add<edm::FileInPath>("preprocess_json", edm::FileInPath("CommonTools/PileupAlgos/plugins/preprocessing_info.json"));
+  desc.add<std::string>("input_tensor_name", "input_1");
+  desc.add<std::string>("output_tensor_name", "Identity");
+  desc.add<int>("n_pf_cands", 4000);
+  desc.add<int>("n_feats", 19);
+  desc.add<bool>("debug", false);
+
+  descriptions.add("abc", desc);
+};
 
 std::unique_ptr<ABCNetTFCache> ABCNetProducer::initializeGlobalCache(const edm::ParameterSet& iConfig) {
   tensorflow::setLogging("3");
