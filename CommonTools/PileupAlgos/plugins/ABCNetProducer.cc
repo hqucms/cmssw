@@ -140,9 +140,7 @@ std::vector<float> ABCNetProducer::minmax_scale(const std::vector<float> &input,
 void ABCNetProducer::preprocess(std::unordered_map<std::string, std::vector<float>> & featureMap, bool debug) {
 
   for (const auto & input_name : input_names_) {
-    //std::cout << input_name << std::endl;
     const auto & preprocessing_params = prep_info_map_[input_name].var_info_map[input_name];
-    //std::cout << preprocessing_params.upper_bound << std::endl;
     featureMap[input_name] = minmax_scale(featureMap[input_name],
 					  preprocessing_params.upper_bound,
 					  preprocessing_params.lower_bound,
@@ -200,11 +198,9 @@ void ABCNetProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) 
   //std::cout << "PRINTING NETWORK OUTPUTS" << std::endl;
   //for (int i = 0; i < n_pf_cands_; i++) std::cout << outputs.at(0).tensor<float,3>()(0, i, n_feats_) << " ";
   
-  //initialize container for ABCNet weights
+  //initialize container for ABCNet weights and fill it
   std::vector<float> weights;
-  //throw random numbers in [0,1] as ABCNet weights for now
-  //srand(100);
- 
+  
   int PFCounter = 0;
   for(auto const& aPF : *pfCol) {
     const pat::PackedCandidate *lPack = dynamic_cast<const pat::PackedCandidate*>(&aPF);
@@ -223,14 +219,11 @@ void ABCNetProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) 
     PFCounter++;
   }
 
-  //std::unique_ptr<edm::ValueMap<float>> ABCNetOut(new edm::ValueMap<float>());
   edm::ValueMap<float> ABCNetOut;
-  //edm::ValueMap<float>::Filler  ABCNetFiller(*ABCNetOut);
   edm::ValueMap<float>::Filler ABCNetFiller(ABCNetOut);
   ABCNetFiller.insert(PFCandidates,weights.begin(),weights.end());
   ABCNetFiller.fill();
   iEvent.emplace(ABCNetOut_, ABCNetOut);
-  //iEvent.put(std::move(ABCNetOut), "weights");
 
 }
 //define this as a plug-in
