@@ -103,6 +103,13 @@ config_recojets = [
     "minPtFastjet" : 0.,
   },
   { 
+    "jet" : "ak8pfabc",
+    "enabled" : True,
+    "inputCollection" : "",
+    "genJetsCollection": "AK4GenJetsNoNu",
+    "minPtFastjet" : 0.,
+  },
+  { 
     "jet" : "ak8pf",
     "enabled" : False,
     "inputCollection" : "",
@@ -135,6 +142,11 @@ nanoInfo_recojets = {
   "ak4pfabc" : {
     "name"  : "JetABC",
     "doc"   : "AK4 PF ABC",
+    "ptcut" : "",
+  },
+  "ak8pfabc" : {
+    "name"  : "FatJetABC",
+    "doc"   : "AK8 PF ABC",
     "ptcut" : "",
   },
   "ak8pf" : {

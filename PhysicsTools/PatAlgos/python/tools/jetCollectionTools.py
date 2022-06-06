@@ -357,6 +357,14 @@ class RecoJetAdder(object):
             srcWeights = cms.InputTag("abc") #this is a edm::ValueMap<float> (mapping each pf candidate to an ABCNet weight)
           )
         )
+        elif jet == "ak8pfabc": #add one elif to make sure to enter in a dedicated "ABC" clustering block, without spoiling the rest
+          self.addProcessAndTask(proc, jetCollection, ak4PFJets.clone(
+            src = pfCand, #pfCand for ak8pfabc is 'packedPFCandidates'
+            rParam = 0.8, #use ak4PFJets producer and update the R parameter
+            applyWeight = True,
+            srcWeights = cms.InputTag("abc")
+          )
+        )
         else:
           self.addProcessAndTask(proc, jetCollection, ak4PFJets.clone(
             src = pfCand,
@@ -384,6 +392,8 @@ class RecoJetAdder(object):
       #
       
       if jet == "ak4pfabc":
+        JETCorrLevels = []
+      if jet == "ak8pfabc":
         JETCorrLevels = []
       
       if recoJetInfo.jetPUMethod == "puppi":
@@ -431,6 +441,8 @@ class RecoJetAdder(object):
       # Need to set this explicitly for ABC jets
       #
       if jet == "ak4pfabc":
+        getattr(proc, "patJetFlavourAssociation{}{}".format(jetUpper,postfix)).weights = cms.InputTag("abc")
+      if jet == "ak8pfabc":
         getattr(proc, "patJetFlavourAssociation{}{}".format(jetUpper,postfix)).weights = cms.InputTag("abc")
 
       getJetMCFlavour = not recoJetInfo.doCalo and recoJetInfo.jetPUMethod != "cs"
