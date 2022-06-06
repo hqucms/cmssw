@@ -15,6 +15,8 @@ from RecoJets.JetProducers.ak4GenJets_cfi  import ak4GenJets
 from RecoJets.JetProducers.ak4PFJets_cfi   import ak4PFJets, ak4PFJetsCHS, ak4PFJetsPuppi, ak4PFJetsSK, ak4PFJetsCS 
 from RecoJets.JetProducers.ak4CaloJets_cfi import ak4CaloJets 
 
+from RecoMET.METProducers.pfMet_cfi import pfMet
+
 from PhysicsTools.PatAlgos.producersLayer1.jetUpdater_cfi import updatedPatJets
 from PhysicsTools.PatAlgos.recoLayer0.jetCorrFactors_cfi  import patJetCorrFactors
 from PhysicsTools.PatAlgos.mcMatchLayer0.jetFlavourId_cff import patJetFlavourAssociation
@@ -357,6 +359,54 @@ class RecoJetAdder(object):
             srcWeights = cms.InputTag("abc") #this is a edm::ValueMap<float> (mapping each pf candidate to an ABCNet weight)
           )
         )
+          self.addProcessAndTask(proc, "pfMetABC", pfMet.clone(
+            src=pfCand,
+            applyWeight = True,
+            srcWeights = cms.InputTag("abc"),
+            alias = "ABCMET"
+          )
+        )
+          #manually add pfMetABC producer to the final MET sequence
+          s = getattr(proc, "fullPatMetSequence")
+          s += proc.pfMetABC #note: s = s + pfMetABC won't work
+          setattr(proc, "fullPatMetSequence", s)
+          proc.pfMetABCTable = cms.EDProducer("SimpleCandidateFlatTableProducer",
+            doc = cms.string('PF MET computed with ABC PF candidates'),
+            extension = cms.bool(False),
+            name = cms.string('ABCMET'),
+            singleton = cms.bool(True),
+            src = cms.InputTag("pfMetABC"),
+            variables = cms.PSet(
+              phi = cms.PSet(
+                compression = cms.string('none'),
+                doc = cms.string('raw ABC PF MET phi'),
+                expr = cms.string("phi"),
+                mcOnly = cms.bool(False),
+                precision = cms.int32(10),
+                type = cms.string('float')
+              ),
+              pt = cms.PSet(
+                compression = cms.string('none'),
+                doc = cms.string('raw ABC PF MET pt'),
+                expr = cms.string("pt"),
+                mcOnly = cms.bool(False),
+                precision = cms.int32(10),
+                type = cms.string('float')
+              ),
+              sumEt = cms.PSet(
+                compression = cms.string('none'),
+                doc = cms.string('raw ABC PF scalar sum of Et'),
+                expr = cms.string("sumEt"),
+                mcOnly = cms.bool(False),
+                precision = cms.int32(10),
+                type = cms.string('float')
+              )
+            )
+          )
+          #manually add the pfMetABCTable to the metTables sequence
+          s = getattr(proc, "metTables")
+          s += proc.pfMetABCTable #note: s = s + pfMetABC won't work
+          setattr(proc, "metTables", s)
         elif jet == "ak8pfabc": #add one elif to make sure to enter in a dedicated "ABC" clustering block, without spoiling the rest
           self.addProcessAndTask(proc, jetCollection, ak4PFJets.clone(
             src = pfCand, #pfCand for ak8pfabc is 'packedPFCandidates'
