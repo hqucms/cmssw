@@ -487,7 +487,8 @@ def SavePatJets(proc, jetName, payload, patJetFinalColl, jetTablePrefix, jetTabl
       payload = payload,
     )
   )
-
+  if "ABC" in jetName:
+    getattr(proc, "jetCorrFactorsNano{}".format(jetName)).levels = ()
   #
   # Update jets
   #
