@@ -106,7 +106,7 @@ config_recojets = [
     "jet" : "ak8pfabc",
     "enabled" : True,
     "inputCollection" : "",
-    "genJetsCollection": "AK4GenJetsNoNu",
+    "genJetsCollection": "AK8GenJetsNoNu",
     "minPtFastjet" : 0.,
   },
   { 
