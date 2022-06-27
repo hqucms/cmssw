@@ -17,7 +17,6 @@ namespace abcnet {
     ~ABCNetMakeInputs() {}
 
     static std::unordered_map<std::string, std::vector<float>> makeFeatureMap( const reco::CandidateView * PFCol, std::vector<size_t> & indices, bool debug = false);
-    constexpr static unsigned max_num_PFCandidates = 4000;
 
   };
 }  // namespace abcnet
