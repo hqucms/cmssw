@@ -11,8 +11,8 @@ pfParticleNetTauTagInfos = pfDeepBoostedTauJetTagInfos.clone(
 
 pfMassDecorrelatedParticleNetTauJetTags = boostedJetTauONNXJetTagsProducer.clone(
     src = 'pfParticleNetTauTagInfos',
-    preprocess_json = 'pnet_ak8_tmp/preprocess.json',
-    model_path = 'pnet_ak8_tmp/particle-net.onnx',
+    preprocess_json = 'RecoBTag/ONNXRuntime/data/pnet_ak8_tmp/preprocess.json',
+    model_path = 'RecoBTag/ONNXRuntime/data/pnet_ak8_tmp/particle-net.onnx',
     flav_names = ["probXtt", "probXtm", "probXte", "probXmm", "probXee",
                   "probXbb", "probXcc", "probXqq", "probXgg", "probQCD"],
 )
