@@ -469,4 +469,13 @@
   <class name="reco::DeepBoostedJetTagInfoRefVector"/>
   <class name="edm::Wrapper<reco::DeepBoostedJetTagInfoCollection>" persistent="false"/>
 
+  <class name="btagbtvdeep::DeepBoostedTauJetFeatures"/>
+  <class name="reco::DeepBoostedTauJetTagInfo"/>
+  <class name="reco::DeepBoostedTauJetTagInfoCollection"/>
+  <class name="reco::DeepBoostedTauJetTagInfoRef"/>
+  <class name="reco::DeepBoostedTauJetTagInfoFwdRef"/>
+  <class name="reco::DeepBoostedTauJetTagInfoRefProd"/>
+  <class name="reco::DeepBoostedTauJetTagInfoRefVector"/>
+  <class name="edm::Wrapper<reco::DeepBoostedTauJetTagInfoCollection>" persistent="false"/>
+
 </lcgdict>

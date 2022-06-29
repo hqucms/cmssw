@@ -94,11 +94,15 @@ const std::vector<std::string> DeepBoostedJetTagInfoProducer::particle_features_
     "pfcand_btagSip3dSig",  "pfcand_btagJetDistVal", "pfcand_mask",         "pfcand_pt_log_nopuppi",
     "pfcand_e_log_nopuppi", "pfcand_ptrel",          "pfcand_erel"};
 
+
+
 const std::vector<std::string> DeepBoostedJetTagInfoProducer::sv_features_{
     "sv_mask", "sv_ptrel",     "sv_erel",     "sv_phirel", "sv_etarel",       "sv_deltaR",  "sv_abseta",
     "sv_mass", "sv_ptrel_log", "sv_erel_log", "sv_pt_log", "sv_pt",           "sv_ntracks", "sv_normchi2",
     "sv_dxy",  "sv_dxysig",    "sv_d3d",      "sv_d3dsig", "sv_costhetasvpv",
 };
+
+
 
 DeepBoostedJetTagInfoProducer::DeepBoostedJetTagInfoProducer(const edm::ParameterSet &iConfig)
     : jet_radius_(iConfig.getParameter<double>("jet_radius")),
@@ -172,7 +176,6 @@ void DeepBoostedJetTagInfoProducer::produce(edm::Event &iEvent, const edm::Event
   pv_ = &vtxs_->at(0);
 
   iEvent.getByToken(sv_token_, svs_);
-
   iEvent.getByToken(pfcand_token_, pfcands_);
 
   iSetup.get<TransientTrackRecord>().get("TransientTrackBuilder", track_builder_);
@@ -202,13 +205,7 @@ void DeepBoostedJetTagInfoProducer::produce(edm::Event &iEvent, const edm::Event
 
     // fill values only if above pt threshold and has daughters, otherwise left
     // empty
-    bool fill_vars = true;
-    if (jet.pt() < min_jet_pt_ || std::abs(jet.eta()) > max_jet_eta_)
-      fill_vars = false;
-    if (jet.numberOfDaughters() == 0)
-      fill_vars = false;
-
-    if (fill_vars) {
+    if (!( (jet.pt() < min_jet_pt_) || (std::abs(jet.eta()) > max_jet_eta_) || (jet.numberOfDaughters() == 0) )) {
       fillParticleFeatures(features, jet);
       fillSVFeatures(features, jet);
 
@@ -268,6 +265,9 @@ void DeepBoostedJetTagInfoProducer::fillParticleFeatures(DeepBoostedJetFeatures 
       continue;
     // from here: get the original reco/packed candidate not scaled by the puppi weight
     auto cand = pfcands_->ptrAt(dau.key());
+    // base requirements on PF candidates
+    //if (use_pnettau_features_ and cand->pt() < min_pt_for_pfcandidates_)
+    //  continue;
     // charged candidate selection (for Higgs Interaction Net)
     if (!include_neutrals_ && (cand->charge() == 0 || cand->pt() < min_pt_for_track_properties_))
       continue;
@@ -313,9 +313,9 @@ void DeepBoostedJetTagInfoProducer::fillParticleFeatures(DeepBoostedJetFeatures 
   }
 
   // reserve space
-  for (const auto &name : particle_features_) {
+  for (const auto &name : particle_features_)
     fts.reserve(name, daughters.size());
-  }
+
 
   auto useTrackProperties = [&](const reco::PFCandidate *reco_cand) {
     const auto *trk = reco_cand->bestTrack();

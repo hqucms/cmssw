@@ -1,4 +1,4 @@
-## list of all available btagInfos
+# list of all available btagInfos
 supportedBtagInfos = [
     'None'
     # legacy framework (supported with RECO/AOD but not MiniAOD)
@@ -47,6 +47,7 @@ supportedBtagInfos = [
   , 'pfDeepBoostedJetTagInfos'
     # ParticleNet (AK8) tag infos
   , 'pfParticleNetTagInfos'
+  , 'pfParticleNetTauTagInfos'
     # ParticleNet (AK4) tag infos
   , 'pfParticleNetAK4TagInfos'
   , 'pfNegativeParticleNetAK4TagInfos'
@@ -260,6 +261,17 @@ for disc in _pfParticleNetJetTagsMetaDiscrs:
     supportedMetaDiscr[disc] = _pfParticleNetJetTagsProbs
 for disc in _pfMassDecorrelatedParticleNetJetTagsMetaDiscrs:
     supportedMetaDiscr[disc] = _pfMassDecorrelatedParticleNetJetTagsProbs
+# -----------------------------------
+
+# -----------------------------------
+# setup ParticleNetTau AK8
+from RecoBTag.ONNXRuntime.pfParticleNetTau_cff import _pfMassDecorrelatedParticleNetTauJetTagsProbs, _pfMassDecorrelatedParticleNetTauJetTagsMetaDiscrs
+# update supportedBtagDiscr
+for disc in _pfMassDecorrelatedParticleNetTauJetTagsProbs:
+    supportedBtagDiscr[disc] = [["pfParticleNetTauTagInfos"]]
+# update supportedMetaDiscr
+for disc in _pfMassDecorrelatedParticleNetTauJetTagsMetaDiscrs:
+    supportedMetaDiscr[disc] = _pfMassDecorrelatedParticleNetTauJetTagsProbs
 # -----------------------------------
 
 # -----------------------------------
