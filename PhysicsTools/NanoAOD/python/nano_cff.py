@@ -402,7 +402,7 @@ def nanoAOD_customizeCommon(process):
         nanoAOD_addDeepBoostedJet_switch = False,
         nanoAOD_addDeepDoubleX_switch = False,
         nanoAOD_addDeepDoubleXV2_switch = False,
-        #nanoAOD_addParticleNetTau_switch = False,
+        nanoAOD_addParticleNet_switch = False,
         #nanoAOD_addParticleNetMass_switch = False,
         )
     run2_nanoAOD_106Xv1.toModify(
