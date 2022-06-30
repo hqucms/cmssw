@@ -89,8 +89,8 @@ ABCNetProducer::~ABCNetProducer() {
 void ABCNetProducer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
   edm::ParameterSetDescription desc;
   desc.add<edm::InputTag>("candName", edm::InputTag("packedPFCandidates"));
-  desc.add<edm::FileInPath>("graph_path", edm::FileInPath("CommonTools/PileupAlgos/plugins/AttentionBasedPileupRejectionModel_Run2.pb"));
-  desc.add<edm::FileInPath>("preprocess_json", edm::FileInPath("CommonTools/PileupAlgos/plugins/preprocessing_info.json"));
+  desc.add<edm::FileInPath>("graph_path", edm::FileInPath("CommonTools/PileupAlgos/data/AttentionBasedPileupRejectionModel_Run2.pb"));
+  desc.add<edm::FileInPath>("preprocess_json", edm::FileInPath("CommonTools/PileupAlgos/data/preprocessing_info.json"));
   desc.add<std::string>("input_tensor_name", "input_1");
   desc.add<std::string>("output_tensor_name", "Identity");
   desc.add<int>("n_pf_cands", 4000);
@@ -214,6 +214,7 @@ void ABCNetProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) 
 	abcweight = 0.0;
       }
       else abcweight = outputs.at(0).tensor<float,3>()(0, indices.at(PFCounter), n_feats_);
+      //abcweight = (abcweight > 0.01) ? abcweight : 0.0; //set a lower threshold to ABCNet weights? to be tested
     }
     weights.push_back(abcweight);
     PFCounter++;
