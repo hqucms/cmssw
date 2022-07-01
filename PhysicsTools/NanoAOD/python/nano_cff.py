@@ -372,7 +372,7 @@ def nanoAOD_customizeCommon(process):
     run2_miniAOD_80XLegacy.toModify(nanoAOD_addDeepInfo_switch, nanoAOD_addDeepBTag_switch = cms.untracked.bool(True))
     for modifier in run2_miniAOD_80XLegacy, run2_nanoAOD_94X2016, run2_nanoAOD_94XMiniAODv1, run2_nanoAOD_94XMiniAODv2:
         modifier.toModify(nanoAOD_addDeepInfo_switch, nanoAOD_addDeepFlavourTag_switch =  cms.untracked.bool(True))
-    (run2_nanoAOD_106Xv2 | run2_miniAOD_devel).toModify(nanoAOD_addDeepInfo_switch, nanoAOD_addParticleNetAK4Tau_switch = True)
+    ## turn it on later (run2_nanoAOD_106Xv2 | run2_miniAOD_devel).toModify(nanoAOD_addDeepInfo_switch, nanoAOD_addParticleNetAK4Tau_switch = True)
     process = nanoAOD_addDeepInfo(process,
                                   addDeepBTag=nanoAOD_addDeepInfo_switch.nanoAOD_addDeepBTag_switch,
                                   addDeepFlavour=nanoAOD_addDeepInfo_switch.nanoAOD_addDeepFlavourTag_switch,
