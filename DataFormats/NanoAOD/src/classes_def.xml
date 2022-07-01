@@ -3,8 +3,8 @@
         <version ClassVersion="3" checksum="3066258528"/>
     </class>
     <class name="std::vector<nanoaod::FlatTable::Column>" />
-    <class name="nanoaod::FlatTable" ClassVersion="3">
-        <version ClassVersion="3" checksum="2443023556"/>
+    <class name="nanoaod::FlatTable" ClassVersion="4">
+        <version ClassVersion="4" checksum="4270976001"/>
     </class>
     <class name="nanoaod::FlatTable::RowView" transient="true" />
     <class name="edm::Wrapper<nanoaod::FlatTable>" />
@@ -21,10 +21,12 @@
     <class name="nanoaod::MergeableCounterTable::VIntColumn" ClassVersion="3">
         <version ClassVersion="3" checksum="2535066991"/>
     </class>
+    <class name="std::vector<int8_t>" />
     <class name="std::vector<nanoaod::MergeableCounterTable::FloatColumn>" />
     <class name="std::vector<nanoaod::MergeableCounterTable::VFloatColumn>" />
     <class name="std::vector<nanoaod::MergeableCounterTable::IntColumn>" />
     <class name="std::vector<nanoaod::MergeableCounterTable::VIntColumn>" />
+    <class name="std::vector<nanoaod::MergeableCounterTable::DoubleColumn>" />
     <class name="nanoaod::MergeableCounterTable::FloatWithNormColumn" />
     <class name="nanoaod::MergeableCounterTable::VFloatWithNormColumn" />
     <class name="std::vector<nanoaod::MergeableCounterTable::FloatWithNormColumn>" />

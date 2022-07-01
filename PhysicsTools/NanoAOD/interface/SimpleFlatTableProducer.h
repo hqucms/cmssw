@@ -30,6 +30,8 @@ class SimpleFlatTableProducerBase : public edm::stream::EDProducer<> {
                 else if (type == "float") vars_.push_back(new FloatVar(vname, nanoaod::FlatTable::FloatColumn, varPSet));
                 else if (type == "uint8") vars_.push_back(new UInt8Var(vname, nanoaod::FlatTable::UInt8Column, varPSet));
                 else if (type == "bool") vars_.push_back(new BoolVar(vname, nanoaod::FlatTable::BoolColumn, varPSet));
+		else if (type == "double") vars_.push_back(new DoubleVar(vname, nanoaod::FlatTable::DoubleColumn, varPSet));
+		else if (type == "int8") vars_.push_back(new Int8Var(vname, nanoaod::FlatTable::Int8Column, varPSet));
                 else throw cms::Exception("Configuration", "unsupported type "+type+" for variable "+vname);
             }
 
@@ -105,6 +107,8 @@ class SimpleFlatTableProducerBase : public edm::stream::EDProducer<> {
         typedef FuncVariable<StringObjectFunction<T>,float> FloatVar;
         typedef FuncVariable<StringObjectFunction<T>,uint8_t> UInt8Var;
         typedef FuncVariable<StringCutObjectSelector<T>,uint8_t> BoolVar;
+	typedef FuncVariable<StringObjectFunction<T>,double> DoubleVar;
+        typedef FuncVariable<StringObjectFunction<T>,int8_t> Int8Var;
         boost::ptr_vector<Variable> vars_;
 };
 
@@ -129,6 +133,7 @@ class SimpleFlatTableProducer : public SimpleFlatTableProducerBase<T, edm::View<
                     else if (type == "double") extvars_.push_back(new DoubleExtVar(vname, nanoaod::FlatTable::FloatColumn, varPSet, this->consumesCollector(), this->skipNonExistingSrc_));
                     else if (type == "uint8") extvars_.push_back(new UInt8ExtVar(vname, nanoaod::FlatTable::UInt8Column, varPSet, this->consumesCollector(), this->skipNonExistingSrc_));
                     else if (type == "bool") extvars_.push_back(new BoolExtVar(vname, nanoaod::FlatTable::BoolColumn, varPSet, this->consumesCollector(), this->skipNonExistingSrc_));
+		    else if (type == "int8") extvars_.push_back(new Int8ExtVar(vname, nanoaod::FlatTable::Int8Column, varPSet, this->consumesCollector(),  this->skipNonExistingSrc_));
                     else throw cms::Exception("Configuration", "unsupported type "+type+" for variable "+vname);
                 }
             }
@@ -198,6 +203,7 @@ class SimpleFlatTableProducer : public SimpleFlatTableProducerBase<T, edm::View<
         typedef ValueMapVariable<double,float> DoubleExtVar;
         typedef ValueMapVariable<bool,uint8_t> BoolExtVar;
         typedef ValueMapVariable<int,uint8_t> UInt8ExtVar;
+	typedef ValueMapVariable<int,int8_t> Int8ExtVar;
         boost::ptr_vector<ExtVariable> extvars_;
 
 };

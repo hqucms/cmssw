@@ -84,6 +84,8 @@ class NanoAODDQM : public DQMEDAnalyzer {
                         case FlatTable::IntColumn: vfill<int>(table,icol,rowsel); break;
                         case FlatTable::UInt8Column: vfill<uint8_t>(table,icol,rowsel); break;
                         case FlatTable::BoolColumn: vfill<uint8_t>(table,icol,rowsel); break;
+		        case FlatTable::DoubleColumn: vfill<double>(table,icol,rowsel); break;
+	         	case FlatTable::Int8Column:   vfill<int8_t>(table,icol,rowsel); break;
                     }
                 }
             protected:

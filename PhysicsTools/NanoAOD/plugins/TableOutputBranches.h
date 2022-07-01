@@ -41,6 +41,8 @@ class TableOutputBranches {
     std::vector<NamedBranchPtr> m_floatBranches;
     std::vector<NamedBranchPtr>   m_intBranches;
     std::vector<NamedBranchPtr> m_uint8Branches;
+    std::vector<NamedBranchPtr> m_doubleBranches;
+    std::vector<NamedBranchPtr> m_int8Branches;
     bool m_branchesBooked;
 
     template<typename T>

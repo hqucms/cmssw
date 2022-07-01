@@ -26,7 +26,8 @@ namespace flatTableHelper {
 
 class FlatTable {
   public:
-    enum ColumnType { FloatColumn, IntColumn, UInt8Column, BoolColumn }; // We could have other Float types with reduced mantissa, and similar
+  enum ColumnType { FloatColumn, IntColumn, UInt8Column, BoolColumn, 
+		    DoubleColumn, Int8Column }; // We could have other Float types with reduced mantissa, and similar
 
     FlatTable() : size_(0) {}
     FlatTable(unsigned int size, const std::string & name, bool singleton, bool extension=false) : size_(size), name_(name), singleton_(singleton), extension_(extension)  {}
@@ -152,6 +153,8 @@ class FlatTable {
      std::vector<float> floats_;
      std::vector<int> ints_;
      std::vector<uint8_t> uint8s_;
+     std::vector<int8_t> int8s_;
+     std::vector<double> doubles_;
 
      template<typename T> 
      static void check_type(FlatTable::ColumnType type) { throw cms::Exception("unsupported type"); }
@@ -166,15 +169,24 @@ template<> inline void FlatTable::check_type<int>(FlatTable::ColumnType type) {
 template<> inline void FlatTable::check_type<uint8_t>(FlatTable::ColumnType type) {
      if (type != FlatTable::UInt8Column && type != FlatTable::BoolColumn) throw cms::Exception("mismatched type");
 }
-
+template<> inline void FlatTable::check_type<double>(FlatTable::ColumnType type) {
+     if (type != FlatTable::DoubleColumn) throw cms::Exception("mismatched type");
+}
+template<> inline void FlatTable::check_type<int8_t>(FlatTable::ColumnType type) {
+     if (type != FlatTable::Int8Column && type != FlatTable::BoolColumn) throw cms::Exception("mismatched type");
+}
 
 
 template<> inline const std::vector<float>   & FlatTable::bigVector<float>()   const { return floats_; }
 template<> inline const std::vector<int>     & FlatTable::bigVector<int>()     const { return ints_; }
 template<> inline const std::vector<uint8_t> & FlatTable::bigVector<uint8_t>() const { return uint8s_; }
+template<> inline const std::vector<double>  & FlatTable::bigVector<double>()  const { return doubles_; }
+template<> inline const std::vector<int8_t>  & FlatTable::bigVector<int8_t>()  const { return int8s_; }
 template<> inline std::vector<float>   & FlatTable::bigVector<float>()   { return floats_; }
 template<> inline std::vector<int>     & FlatTable::bigVector<int>()     { return ints_; }
 template<> inline std::vector<uint8_t> & FlatTable::bigVector<uint8_t>() { return uint8s_; }
+template<> inline std::vector<double>  & FlatTable::bigVector<double>()  { return doubles_; }
+template<> inline std::vector<int8_t>  & FlatTable::bigVector<int8_t>()  { return int8s_; }
 
 } // nanoaod
 

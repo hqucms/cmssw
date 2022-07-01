@@ -29,6 +29,12 @@ TableOutputBranches::defineBranchesFromFirstEvent(const nanoaod::FlatTable & tab
             case (nanoaod::FlatTable::BoolColumn):
                 m_uint8Branches.emplace_back(var, tab.columnDoc(i), "O");
                 break;
+            case (nanoaod::FlatTable::DoubleColumn):
+	        m_doubleBranches.emplace_back(var, tab.columnDoc(i), "D");
+                break;
+	    case (nanoaod::FlatTable::Int8Column):
+	        m_int8Branches.emplace_back(var, tab.columnDoc(i), "b");
+	        break;
         }
     }
 }
