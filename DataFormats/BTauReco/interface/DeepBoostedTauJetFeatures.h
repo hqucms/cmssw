@@ -41,7 +41,10 @@ public:
   void check_consistency(const std::vector<std::string> &names) const {
     if (names.empty()) return;
     const auto ref_len = get(names.front()).size();
+    std::cout << "check_consistency ref_len = " << ref_len << "\n";
+    std::cout << "check_consistency names.size = " << names.size() << "\n";
     for (unsigned i=1; i<names.size(); ++i){
+      std::cout << "check_consistency names = " << names[i] << "\n"; 
       if (get(names[i]).size() != ref_len){
         throw cms::Exception("InvalidArgument") << "[DeepBoostedTauJetFeatures::check_consistency()] Inconsistent variable length "
             << get(names[i]).size() << " for " << names[i] << ", should be " << ref_len;

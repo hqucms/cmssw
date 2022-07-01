@@ -51,6 +51,8 @@ supportedBtagInfos = [
     # ParticleNet (AK4) tag infos
   , 'pfParticleNetAK4TagInfos'
   , 'pfNegativeParticleNetAK4TagInfos'
+  , 'pfParticleNetAK4TauTagInfos'
+  , 'pfNegativeParticleNetAK4TauTagInfos'
     # HiggsInteractionNet tag infos
   , 'pfHiggsInteractionNetTagInfos'
   ]
@@ -289,6 +291,16 @@ from RecoBTag.ONNXRuntime.pfParticleNetAK4_cff import _pfNegativeParticleNetAK4J
 for disc in _pfNegativeParticleNetAK4JetTagsProbs:
     supportedBtagDiscr[disc] = [["pfNegativeParticleNetAK4TagInfos"]]
 # -----------------------------------
+
+# -----------------------------------
+# setup ParticleNet AK4
+from RecoBTag.ONNXRuntime.pfParticleNetAK4Tau_cff import _pfParticleNetAK4TauJetTagsProbs, _pfParticleNetAK4TauJetTagsMetaDiscrs
+# update supportedBtagDiscr
+for disc in _pfParticleNetAK4TauJetTagsProbs + _pfParticleNetAK4TauJetTagsMetaDiscrs:
+    supportedBtagDiscr[disc] = [["pfParticleNetAK4TauTagInfos"]]
+# update supportedMetaDiscr
+for disc in _pfParticleNetAK4TauJetTagsMetaDiscrs:
+    supportedMetaDiscr[disc] = _pfParticleNetAK4TauJetTagsProbs
 
 # -----------------------------------
 # setup HiggsInteractionNet

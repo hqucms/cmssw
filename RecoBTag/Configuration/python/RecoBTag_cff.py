@@ -14,6 +14,7 @@ from RecoBTag.ONNXRuntime.pfHiggsInteractionNet_cff import *
 from RecoBTag.ONNXRuntime.pfParticleNet_cff import *
 from RecoBTag.ONNXRuntime.pfParticleNetTau_cff import *
 from RecoBTag.ONNXRuntime.pfParticleNetAK4_cff import *
+from RecoBTag.ONNXRuntime.pfParticleNetAK4Tau_cff import *
 from RecoVertex.AdaptiveVertexFinder.inclusiveVertexing_cff import *
 
 legacyBTaggingTask = cms.Task(

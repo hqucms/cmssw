@@ -106,20 +106,6 @@ const std::vector<std::string> DeepBoostedTauJetTagInfoProducer::particle_featur
 };
 
 
-/*
-"jet_pfcand_puppiw",        "jet_pfcand_hcalFrac",       "jet_pfcand_VTX_ass",      "jet_pfcand_lostInnerHits",
-    "jet_pfcand_quality",       "jet_pfcand_charge",         "jet_pfcand_isEl",         "jet_pfcand_isMu",
-    "jet_pfcand_isChargedHad",  "jet_pfcand_isGamma",        "jet_pfcand_isNeutralHad", "jet_pfcand_phirel",
-    "jet_pfcand_etarel",        "jet_pfcand_deltaR",         "jet_pfcand_abseta",       "jet_pfcand_ptrel_log",
-    "jet_pfcand_erel_log",      "jet_pfcand_pt_log",         "jet_pfcand_drminsv",      "jet_pfcand_drsubjet1",
-    "jet_pfcand_drsubjet2",     "jet_pfcand_normchi2",       "jet_pfcand_dz",           "jet_pfcand_dzsig",
-    "jet_pfcand_dxy",           "jet_pfcand_dxysig",         "jet_pfcand_dptdpt",       "jet_pfcand_detadeta",
-    "jet_pfcand_dphidphi",      "jet_pfcand_dxydxy",         "jet_pfcand_dzdz",         "jet_pfcand_dxydz",
-    "jet_pfcand_dphidxy",       "jet_pfcand_dlambdadz",      "jet_pfcand_btagEtaRel",   "jet_pfcand_btagPtRatio",
-    "jet_pfcand_btagPParRatio", "jet_pfcand_btagSip2dVal",   "jet_pfcand_btagSip2dSig", "jet_pfcand_btagSip3dVal",
-    "jet_pfcand_btagSip3dSig",  "jet_pfcand_btagJetDistVal", "jet_pfcand_mask",         "jet_pfcand_pt_log_nopuppi",
-    "jet_pfcand_e_log_nopuppi", "jet_pfcand_ptrel",          "jet_pfcand_erel"
-*/
 const std::vector<std::string> DeepBoostedTauJetTagInfoProducer::sv_features_{
   "sv_mask",
     "jet_sv_pt_log",
@@ -247,9 +233,11 @@ void DeepBoostedTauJetTagInfoProducer::produce(edm::Event &iEvent, const edm::Ev
 
 
     if (!( (jet.pt() < min_jet_pt_) || (std::abs(jet.eta()) > max_jet_eta_) || (jet.numberOfDaughters() == 0) )) {
+      std::cout << " features \n";
       fillParticleFeatures(features, jet);
       fillSVFeatures(features, jet);
       
+      std::cout << "check_consistency\n";
       features.check_consistency(particle_features_);
       features.check_consistency(sv_features_);
     }

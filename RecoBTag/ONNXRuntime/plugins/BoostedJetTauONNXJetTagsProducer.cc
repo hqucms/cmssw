@@ -68,11 +68,12 @@ private:
 BoostedJetTauONNXJetTagsProducer::BoostedJetTauONNXJetTagsProducer(const edm::ParameterSet &iConfig, const ONNXRuntime *cache)
     : src_(consumes<TagInfoCollection>(iConfig.getParameter<edm::InputTag>("src"))),
       flav_names_(iConfig.getParameter<std::vector<std::string>>("flav_names")),
-      debug_(iConfig.getUntrackedParameter<bool>("debugMode", false)) {
+      debug_(iConfig.getUntrackedParameter<bool>("debugMode", true)) {
   // load preprocessing info
   auto json_path = iConfig.getParameter<std::string>("preprocess_json");
   if (!json_path.empty()) {
     // use preprocessing json file if available
+    std::cout << " json input: " << json_path << "\n";
     std::ifstream ifs(edm::FileInPath(json_path).fullPath());
     nlohmann::json js = nlohmann::json::parse(ifs);
     js.at("input_names").get_to(input_names_);

@@ -12,6 +12,7 @@ def applyDeepBtagging( process, postfix="" ) :
     from Configuration.Eras.Modifier_run2_miniAOD_devel_cff import run2_miniAOD_devel
     from Configuration.ProcessModifiers.run2_miniAOD_UL_cff import run2_miniAOD_UL
     from RecoBTag.ONNXRuntime.pfParticleNetAK4_cff import _pfParticleNetAK4JetTagsAll as pfParticleNetAK4JetTagsAll
+    from RecoBTag.ONNXRuntime.pfParticleNetAK4Tau_cff import _pfParticleNetAK4TauJetTagsAll as pfParticleNetAK4TauJetTagsAll
 
     # update slimmed jets to include DeepFlavour (keep same name)
     # make clone for DeepFlavour-less slimmed jets, so output name is preserved
@@ -26,7 +27,7 @@ def applyDeepBtagging( process, postfix="" ) :
       )
     )
     run2_miniAOD_UL.toModify(_btagDiscriminatorsAK4,
-                             names = _btagDiscriminatorsAK4.names + pfParticleNetAK4JetTagsAll)
+                             names = _btagDiscriminatorsAK4.names + pfParticleNetAK4JetTagsAll + pfParticleNetAK4TauJetTagsAll)
     updateJetCollection(
        process,
        jetSource = cms.InputTag('slimmedJetsNoDeepFlavour'),
