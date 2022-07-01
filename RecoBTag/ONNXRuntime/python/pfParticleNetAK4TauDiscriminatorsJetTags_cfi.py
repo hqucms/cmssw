@@ -7,13 +7,10 @@ pfParticleNetAK4TauDiscriminatorsJetTags = cms.EDProducer(
          name = cms.string('BvsAll'),
          numerator = cms.VInputTag(
             cms.InputTag('pfParticleNetAK4TauJetTags', 'probb'),
-            cms.InputTag('pfParticleNetAK4TauJetTags', 'probbb'),
             ),
          denominator=cms.VInputTag(
             cms.InputTag('pfParticleNetAK4TauJetTags', 'probb'),
-            cms.InputTag('pfParticleNetAK4TauJetTags', 'probbb'),
             cms.InputTag('pfParticleNetAK4TauJetTags', 'probc'),
-            cms.InputTag('pfParticleNetAK4TauJetTags', 'probcc'),
             cms.InputTag('pfParticleNetAK4TauJetTags', 'probuds'),
             cms.InputTag('pfParticleNetAK4TauJetTags', 'probg'),
          ),
@@ -22,11 +19,9 @@ pfParticleNetAK4TauDiscriminatorsJetTags = cms.EDProducer(
          name = cms.string('CvsL'),
          numerator = cms.VInputTag(
             cms.InputTag('pfParticleNetAK4TauJetTags', 'probc'),
-            cms.InputTag('pfParticleNetAK4TauJetTags', 'probcc'),
             ),
          denominator = cms.VInputTag(
             cms.InputTag('pfParticleNetAK4TauJetTags', 'probc'),
-            cms.InputTag('pfParticleNetAK4TauJetTags', 'probcc'),
             cms.InputTag('pfParticleNetAK4TauJetTags', 'probuds'),
             cms.InputTag('pfParticleNetAK4TauJetTags', 'probg'),
             ),
@@ -35,13 +30,10 @@ pfParticleNetAK4TauDiscriminatorsJetTags = cms.EDProducer(
          name = cms.string('CvsB'),
          numerator = cms.VInputTag(
             cms.InputTag('pfParticleNetAK4TauJetTags', 'probc'),
-            cms.InputTag('pfParticleNetAK4TauJetTags', 'probcc'),
             ),
          denominator = cms.VInputTag(
             cms.InputTag('pfParticleNetAK4TauJetTags', 'probc'),
-            cms.InputTag('pfParticleNetAK4TauJetTags', 'probcc'),
             cms.InputTag('pfParticleNetAK4TauJetTags', 'probb'),
-            cms.InputTag('pfParticleNetAK4TauJetTags', 'probbb'),
             ),
          ),
       cms.PSet(

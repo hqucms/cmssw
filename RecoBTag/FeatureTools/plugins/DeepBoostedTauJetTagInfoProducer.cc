@@ -233,11 +233,9 @@ void DeepBoostedTauJetTagInfoProducer::produce(edm::Event &iEvent, const edm::Ev
 
 
     if (!( (jet.pt() < min_jet_pt_) || (std::abs(jet.eta()) > max_jet_eta_) || (jet.numberOfDaughters() == 0) )) {
-      std::cout << " features \n";
       fillParticleFeatures(features, jet);
       fillSVFeatures(features, jet);
-      
-      std::cout << "check_consistency\n";
+
       features.check_consistency(particle_features_);
       features.check_consistency(sv_features_);
     }

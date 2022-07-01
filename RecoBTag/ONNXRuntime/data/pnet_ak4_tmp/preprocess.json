@@ -42,7 +42,8 @@
         "pad": 0
       }
     },
-    "var_length": 50
+    "min_length": 16,
+    "max_length": 50
   },
   "pf_features": {
     "var_names": [
@@ -283,7 +284,8 @@
         "pad": 0
       }
     },
-    "var_length": 50
+    "min_length": 16,
+    "max_length": 50
   },
   "pf_mask": {
     "var_names": [
@@ -299,7 +301,8 @@
         "pad": 0
       }
     },
-    "var_length": 50
+    "min_length": 16,
+    "max_length": 50
   },
   "sv_points": {
     "var_names": [
@@ -324,7 +327,8 @@
         "pad": 0
       }
     },
-    "var_length": 5
+    "min_length": 1,
+    "max_length": 5
   },
   "sv_features": {
     "var_names": [
@@ -430,7 +434,8 @@
         "pad": 0
       }
     },
-    "var_length": 5
+    "min_length": 1,
+    "max_length": 5
   },
   "sv_mask": {
     "var_names": [
@@ -446,6 +451,7 @@
         "pad": 0
       }
     },
-    "var_length": 5
+    "min_length": 1,
+    "max_length": 5
   }
 }
