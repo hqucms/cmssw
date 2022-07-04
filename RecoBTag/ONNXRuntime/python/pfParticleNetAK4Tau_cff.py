@@ -16,7 +16,9 @@ pfParticleNetAK4TauJetTags = boostedJetTauONNXJetTagsProducer.clone(
     src = 'pfParticleNetAK4TauTagInfos',
     preprocess_json = 'RecoBTag/ONNXRuntime/data/pnet_ak4_tmp/preprocess.json',
     model_path = 'RecoBTag/ONNXRuntime/data/pnet_ak4_tmp/particle-net.onnx',
-    flav_names = ["probmu", "probele", "probtau1h0p", "probtau1h1or2p", "probtau3h0p", "probtau3h1p", "probb", "probc", "probuds", "probg"],
+    flav_names = ["probmu", "probele", "probtau1h0p", "probtau1h1or2p", "probtau3h0p", "probtau3h1p",
+                  "probb", "probc", "probuds", "probg",
+                  "ptvis", "ptnu"],
 )
 
 from CommonTools.PileupAlgos.Puppi_cff import puppi

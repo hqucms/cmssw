@@ -9,7 +9,8 @@
     "label_H_cc",
     "label_H_qq",
     "label_H_gg",
-    "label_QCD"
+    "label_QCD",
+    "target_mass"
   ],
   "input_names": [
     "pf_points",

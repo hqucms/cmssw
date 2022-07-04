@@ -9,7 +9,9 @@
     "label_b",
     "label_c",
     "label_uds",
-    "label_g"
+    "label_g",
+    "target_pt_vis",
+    "target_pt_nu"
   ],
   "input_names": [
     "pf_points",
