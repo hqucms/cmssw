@@ -5,9 +5,13 @@
 
 #include "DataFormats/PatCandidates/interface/PackedCandidate.h" //for pat
 #include "DataFormats/Candidate/interface/Candidate.h" // for reco
+
+#include "PhysicsTools/NearestNeighbors/interface/NearestNeighbors.h"
+
 #include "ABCNetMakeInputs.h"
 
 using namespace abcnet;
+using PointCloud = cms::nanoflann::PointCloud<float, 2>; //default value for the DIM parameter is 3, but want to gather using 2 dims only (eta, phi). See template definition L11 of PhysicsTools/NearestNeighbors/interface/NearestNeighbors.h
 
 template <typename A, typename B> void zip(const std::vector<A> &a, const std::vector<B> &b, std::vector<std::pair<A,B>> &zipped) {
   for(size_t i=0; i<a.size(); ++i) {
@@ -61,7 +65,12 @@ std::unordered_map<std::string, std::vector<float>> ABCNetMakeInputs::makeFeatur
 
   //fill feature map
   std::unordered_map<std::string, std::vector<float>> fts;
+  PointCloud::Points points;
+  
   for (auto const & aPF : PFCands) {
+    
+    points.push_back({{float(aPF.eta()), float(aPF.phi())}});
+    
     fts["PFCandEta"].push_back(aPF.eta()); //f0
     fts["PFCandPhi"].push_back(aPF.phi()); //f1
     fts["PFCandLogPt"].push_back(log(aPF.pt())); //f2
@@ -97,6 +106,26 @@ std::unordered_map<std::string, std::vector<float>> ABCNetMakeInputs::makeFeatur
     if ( !std::is_sorted(fts["PFCandLogPt"].begin(), fts["PFCandLogPt"].end(), std::greater<float>() ) ) std::cout << "*** WARNING *** PFCandidates are not sorted in Pt!!!" << std::endl;
     else std::cout << "No issues with the sorting of PF candidates detected" << std::endl;
   }
+  
+  // method to gather kNN indices
+  auto knn = [&](size_t num_neighbors, size_t max_support_size, size_t max_query_size = 0) {
+    if (max_query_size == 0)
+      max_query_size = max_support_size;
+
+    PointCloud::Points supports(points.begin(), points.begin() + std::min(max_support_size, points.size()));
+    PointCloud::Points queries(points.begin(), points.begin() + std::min(max_query_size, points.size()));
+    auto result = PointCloud::knn<float>(supports, queries, num_neighbors);  // queries.size() * num_neighbors
+    std::vector<float> output(max_query_size * num_neighbors, max_support_size - 1);
+    std::copy(result.begin(), result.begin() + std::min(result.size(), output.size()), output.begin());
+
+    //std::cout << "[knn] k=" << num_neighbors << ", num_points=" << points.size()
+    //<< ", max_support_size=" << max_support_size << ", max_query_size=" << max_query_size
+    //<< ", knn_result_size=" << result.size() << ", final_output_size=" << output.size() << std::endl;
+    return output;
+  };
+
+  std::vector<float> KNNs = knn(20, fts["PFCandEta"].size(), fts["PFCandEta"].size()); //gather 20 k-nearest neighbors. This vector has size (n_particles * 20)
+  //std::cout << "size of KNNs is " << KNNs.size() << std::endl;
   return fts;
 
 };
