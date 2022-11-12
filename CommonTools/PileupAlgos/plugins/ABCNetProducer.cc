@@ -196,7 +196,7 @@ void ABCNetProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) 
   }
   tensorflow::Tensor knn_indices (tensorflow::DT_FLOAT, { 1, n_pf_cands_, 20 });
   knn_indices.flat<float>().setZero();
-  for (size_t i = 0; i < KNNs.size(); i ++) {
+  for (size_t i = 0; i < KNNs.size()/20; i++) {
     for (int j = 0; j < 20; j++){
       inputs.tensor<float,3>()(0,i,j) = float(KNNs.at(i*20+j));
     }
