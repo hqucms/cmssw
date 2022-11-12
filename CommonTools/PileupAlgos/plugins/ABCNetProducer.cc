@@ -46,7 +46,8 @@ using namespace abcnet;
 ABCNetProducer::ABCNetProducer(const edm::ParameterSet& iConfig, const ABCNetTFCache* cache):
   tokenPFCandidates_(consumes<reco::CandidateView>(iConfig.getParameter<edm::InputTag>("candName"))),
   session_(nullptr),
-  input_tensor_name_(iConfig.getParameter<std::string>("input_tensor_name")),
+  input_tensor_name_1(iConfig.getParameter<std::string>("input_tensor_name_1")),
+  input_tensor_name_2(iConfig.getParameter<std::string>("input_tensor_name_2")),
   output_tensor_name_(iConfig.getParameter<std::string>("output_tensor_name")),
   n_pf_cands_(iConfig.getParameter<int>("n_pf_cands")),
   n_feats_(iConfig.getParameter<int>("n_feats")),
@@ -89,9 +90,10 @@ ABCNetProducer::~ABCNetProducer() {
 void ABCNetProducer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
   edm::ParameterSetDescription desc;
   desc.add<edm::InputTag>("candName", edm::InputTag("packedPFCandidates"));
-  desc.add<edm::FileInPath>("graph_path", edm::FileInPath("CommonTools/PileupAlgos/data/AttentionBasedPileupRejectionModel_Run2.pb"));
+  desc.add<edm::FileInPath>("graph_path", edm::FileInPath("CommonTools/PileupAlgos/data/AttentionBasedPileupRejectionModel_Run2_KDTree.pb"));
   desc.add<edm::FileInPath>("preprocess_json", edm::FileInPath("CommonTools/PileupAlgos/data/preprocessing_info.json"));
-  desc.add<std::string>("input_tensor_name", "input_1");
+  desc.add<std::string>("input_tensor_name_1", "input_1");
+  desc.add<std::string>("input_tensor_name_2", "input_2");
   desc.add<std::string>("output_tensor_name", "Identity");
   desc.add<int>("n_pf_cands", 4000);
   desc.add<int>("n_feats", 19);
@@ -200,7 +202,7 @@ void ABCNetProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) 
     }
   }
   std::vector<tensorflow::Tensor> outputs;
-  tensorflow::run(session_, { { input_tensor_name_, inputs } }, { output_tensor_name_ }, &outputs);
+  tensorflow::run(session_, { { input_tensor_name_1, inputs }, { input_tensor_name_2, knn_indices } }, { output_tensor_name_ }, &outputs);
   //std::cout << "PRINTING NETWORK OUTPUTS" << std::endl;
   //for (int i = 0; i < n_pf_cands_; i++) std::cout << outputs.at(0).tensor<float,3>()(0, i, n_feats_) << " ";
   

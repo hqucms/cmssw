@@ -61,7 +61,8 @@ private:
   std::unordered_map<std::string, PreprocessParams> prep_info_map_;  //preprocessing info for each input feature
   //session for TF evaluation
   tensorflow::Session* session_;
-  std::string input_tensor_name_;
+  std::string input_tensor_name_1;
+  std::string input_tensor_name_2;
   std::string output_tensor_name_;
   int n_pf_cands_;
   int n_feats_;
