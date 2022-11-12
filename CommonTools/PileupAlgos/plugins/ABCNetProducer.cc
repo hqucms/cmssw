@@ -184,7 +184,7 @@ void ABCNetProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) 
   auto [features, KNNs] = ABCNetMakeInputs::makeFeatureMap(pfCol, indices, debug_);
   ABCNetProducer::preprocess(features, debug_);
   
-  //fill the input tensor
+  //fill the input tensors
   tensorflow::Tensor inputs (tensorflow::DT_FLOAT, { 1, n_pf_cands_, n_feats_ });
   inputs.flat<float>().setZero();
   for (int j = 0; j < n_feats_; j++) {
@@ -192,7 +192,13 @@ void ABCNetProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) 
       inputs.tensor<float,3>()(0,i,j) = float(features[input_names_.at(j)].at(i)); //looks suboptimal; is there way of filling the tensor avoiding nested loops?
     }
   }
-  
+  tensorflow::Tensor knn_indices (tensorflow::DT_FLOAT, { 1, n_pf_cands_, 20 });
+  knn_indices.flat<float>().setZero();
+  for (size_t i = 0; i < KNNs.size(); i ++) {
+    for (int j = 0; j < 20; j++){
+      inputs.tensor<float,3>()(0,i,j) = float(KNNs.at(i*20+j));
+    }
+  }
   std::vector<tensorflow::Tensor> outputs;
   tensorflow::run(session_, { { input_tensor_name_, inputs } }, { output_tensor_name_ }, &outputs);
   //std::cout << "PRINTING NETWORK OUTPUTS" << std::endl;
