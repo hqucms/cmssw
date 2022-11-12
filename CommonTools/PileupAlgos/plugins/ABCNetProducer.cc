@@ -179,9 +179,9 @@ void ABCNetProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) 
   iEvent.getByToken(tokenPFCandidates_, PFCandidates);
   const reco::CandidateView *pfCol = PFCandidates.product();
   
-  //make feature map and preprocess features
+  //make feature map and KNNs, preprocess features
   std::vector<size_t> indices; 
-  auto features = ABCNetMakeInputs::makeFeatureMap(pfCol, indices, debug_);
+  auto [features, KNNs] = ABCNetMakeInputs::makeFeatureMap(pfCol, indices, debug_);
   ABCNetProducer::preprocess(features, debug_);
   
   //fill the input tensor

@@ -39,7 +39,7 @@ template <typename A> std::vector<size_t> get_indices(std::vector<A> & v) {
   return idx_inverse;
 }
 
-std::unordered_map<std::string, std::vector<float>> ABCNetMakeInputs::makeFeatureMap (const reco::CandidateView * pfCol, std::vector<size_t> & indices, bool debug) {
+std::tuple< std::unordered_map<std::string, std::vector<float>>, std::vector<float> > ABCNetMakeInputs::makeFeatureMap (const reco::CandidateView * pfCol, std::vector<size_t> & indices, bool debug) {
   
   //store PF candidates and their pts into vectors
   std::vector<pat::PackedCandidate> PFCands;
@@ -126,6 +126,6 @@ std::unordered_map<std::string, std::vector<float>> ABCNetMakeInputs::makeFeatur
 
   std::vector<float> KNNs = knn(20, fts["PFCandEta"].size(), fts["PFCandEta"].size()); //gather 20 k-nearest neighbors. This vector has size (n_particles * 20)
   //std::cout << "size of KNNs is " << KNNs.size() << std::endl;
-  return fts;
+  return {fts,KNNs};
 
 };

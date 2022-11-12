@@ -16,7 +16,7 @@ namespace abcnet {
     ABCNetMakeInputs() {}
     ~ABCNetMakeInputs() {}
 
-    static std::unordered_map<std::string, std::vector<float>> makeFeatureMap( const reco::CandidateView * PFCol, std::vector<size_t> & indices, bool debug = false);
+    static std::tuple< std::unordered_map<std::string, std::vector<float>>, std::vector<float> >  makeFeatureMap( const reco::CandidateView * PFCol, std::vector<size_t> & indices, bool debug = false);
 
   };
 }  // namespace abcnet
