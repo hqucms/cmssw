@@ -124,8 +124,10 @@ std::tuple< std::unordered_map<std::string, std::vector<float>>, std::vector<flo
     return output;
   };
 
-  std::vector<float> KNNs = knn(20, fts["PFCandEta"].size(), fts["PFCandEta"].size()); //gather 20 k-nearest neighbors. This vector has size (n_particles * 20)
+  std::vector<float> KNNs = knn(21, fts["PFCandEta"].size(), fts["PFCandEta"].size()); //gather 21 k-nearest neighbors. This vector has size (n_particles * 21)
   //std::cout << "size of KNNs is " << KNNs.size() << std::endl;
+  //for each particle, the first KNN is the particle itself. The training was done excluding this first KNN. Exclude it during evaluation as well
+  for (int i = static_cast<int>(fts["PFCandEta"].size())-1; i >= 0; i--) KNNs.erase(KNNs.begin()+i*21); //remove elements starting from the end
   return {fts,KNNs};
 
 };
