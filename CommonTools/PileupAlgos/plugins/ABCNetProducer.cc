@@ -201,10 +201,28 @@ void ABCNetProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) 
       inputs.tensor<float,3>()(0,i,j) = float(KNNs.at(i*20+j));
     }
   }
+  if (debug_) {
+    std::cout << "PRINTING NETWORK INPUTS" << std::endl;
+    for (int i = 0; i < 3; i++) {
+      std::cout << "Features: \n";
+    for (int j = 0; j < n_feats_; j++) {
+      std::cout << inputs.tensor<float,3>()(0, i, j) << ", ";
+    }
+    std::cout << "\n";
+    std::cout << "KNN indices: \n";
+    for (int j = 0; j < 20; j++) {
+      std::cout << knn_indices.tensor<float,3>()(0, i, j) << ", ";
+    }
+    std::cout << "\n";
+    }
+  }
   std::vector<tensorflow::Tensor> outputs;
   tensorflow::run(session_, { { input_tensor_name_1, inputs }, { input_tensor_name_2, knn_indices } }, { output_tensor_name_ }, &outputs);
-  //std::cout << "PRINTING NETWORK OUTPUTS" << std::endl;
-  //for (int i = 0; i < n_pf_cands_; i++) std::cout << outputs.at(0).tensor<float,3>()(0, i, n_feats_) << " ";
+  if (debug_) {
+    std::cout << "PRINTING NETWORK OUTPUTS" << std::endl;
+    for (int i = 0; i < n_pf_cands_; i++) std::cout << outputs.at(0).tensor<float,3>()(0, i, n_feats_) << " ";
+  
+  }
   
   //initialize container for ABCNet weights and fill it
   std::vector<float> weights;
