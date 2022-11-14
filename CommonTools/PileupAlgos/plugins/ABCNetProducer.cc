@@ -198,7 +198,7 @@ void ABCNetProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) 
   knn_indices.flat<float>().setZero();
   for (int i = 0; i < n_pf_cands_; i++) {
     for (int j = 0; j < 20; j++){
-      inputs.tensor<float,3>()(0,i,j) = float(KNNs.at(i*20+j));
+      knn_indices.tensor<float,3>()(0,i,j) = float(KNNs.at(i*20+j));
     }
   }
   if (debug_) {
