@@ -182,7 +182,11 @@ void ABCNetProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) 
   const reco::CandidateView *pfCol = PFCandidates.product();
   
   //make feature map and KNNs, preprocess features
-  std::vector<size_t> indices; 
+  std::vector<size_t> indices(pfCol->size()); // indices sorted by pT: e.g., 0th element is the idx w/ highest pT
+  std::iota(indices.begin(), indices.end(), 0);
+  std::sort(indices.begin(), indices.end(), [&](const size_t i, const size_t j) {
+    return pfCol->at(i).pt() > pfCol->at(j).pt();
+  });
   auto [features, KNNs] = ABCNetMakeInputs::makeFeatureMap(pfCol, indices, debug_);
   ABCNetProducer::preprocess(features, debug_);
   
@@ -225,25 +229,10 @@ void ABCNetProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) 
   }
   
   //initialize container for ABCNet weights and fill it
-  std::vector<float> weights;
-  
-  int PFCounter = 0;
-  for(auto const& aPF : *pfCol) {
-    const pat::PackedCandidate *lPack = dynamic_cast<const pat::PackedCandidate*>(&aPF);
-    float abcweight = -1.;
-    if(lPack == nullptr) { 
-      // throw error
-      throw edm::Exception(edm::errors::LogicError,"ABCNetProducer: cannot get weights since inputs are not PackedCandidates");
-    }
-    else{
-      if (indices.at(PFCounter) >= (unsigned)n_pf_cands_) { //if the particle wasn't considered in evaluation, assign 0 weight
-	abcweight = 0.0;
-      }
-      else abcweight = outputs.at(0).tensor<float,3>()(0, indices.at(PFCounter), n_feats_);
-      //abcweight = (abcweight > 0.01) ? abcweight : 0.0; //set a lower threshold to ABCNet weights? to be tested
-    }
-    weights.push_back(abcweight);
-    PFCounter++;
+  std::vector<float> weights(PFCandidates->size(), 0);
+
+  for (size_t i = 0; i < indices.size() && i < size_t(n_pf_cands_); ++i) {
+    weights[indices.at(i)] = outputs.at(0).tensor<float, 3>()(0, i, n_feats_);
   }
 
   edm::ValueMap<float> ABCNetOut;
