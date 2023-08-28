@@ -248,7 +248,7 @@ def nanoAOD_customizeCommon(process):
     # enable rerun of PNet for CHS jets for early run3 eras
     # (it is rerun for run2 within jet tasks while is not needed for newer
     # run3 eras as it is present in miniAOD)
-    (run3_nanoAOD_122 | run3_nanoAOD_124).toModify(
+    (run2_nanoAOD_106Xv2 | run3_nanoAOD_122 | run3_nanoAOD_124).toModify(
         nanoAOD_tau_switch, runPNetAK4 = True
     )
     nanoAOD_addPNetToTaus(process,
