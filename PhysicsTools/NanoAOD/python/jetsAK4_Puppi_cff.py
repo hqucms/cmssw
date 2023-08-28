@@ -178,7 +178,7 @@ def nanoAOD_addDeepInfoAK4(process,addParticleNetUL,addParticleNet,addRobustParT
     )
     process.load("Configuration.StandardSequences.MagneticField_cff")
     process.jetPuppiCorrFactorsNano.src="selectedUpdatedPatJetsWithDeepInfo"
-    process.updatedJets.jetSource="selectedUpdatedPatJetsWithDeepInfo"
+    process.updatedJetsPuppi.jetSource = "selectedUpdatedPatJetsWithDeepInfo"
     return process
 
 nanoAOD_addDeepInfoAK4_switch = cms.PSet(
