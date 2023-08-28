@@ -47,9 +47,9 @@ linkedObjects = cms.EDProducer("PATObjectCrossLinker",
 )
 
 # Switch to AK4 CHS jets for Run-2
-run2_nanoAOD_ANY.toModify(
-    linkedObjects, jets="finalJets"
-)
+# run2_nanoAOD_ANY.toModify(
+#     linkedObjects, jets="finalJets"
+# )
 
 # boosted taus don't exist in 122X MINI
 run3_nanoAOD_122.toModify(
@@ -74,13 +74,13 @@ nanoTableTaskCommon = cms.Task(
 )
 
 # Replace AK4 Puppi with AK4 CHS for Run-2
-_nanoTableTaskCommonRun2 = nanoTableTaskCommon.copy()
-_nanoTableTaskCommonRun2.replace(jetPuppiTask, jetTask)
-_nanoTableTaskCommonRun2.replace(jetPuppiForMETTask, jetForMETTask)
-_nanoTableTaskCommonRun2.replace(jetPuppiTablesTask, jetTablesTask)
-run2_nanoAOD_ANY.toReplaceWith(
-    nanoTableTaskCommon, _nanoTableTaskCommonRun2
-)
+# _nanoTableTaskCommonRun2 = nanoTableTaskCommon.copy()
+# _nanoTableTaskCommonRun2.replace(jetPuppiTask, jetTask)
+# _nanoTableTaskCommonRun2.replace(jetPuppiForMETTask, jetForMETTask)
+# _nanoTableTaskCommonRun2.replace(jetPuppiTablesTask, jetTablesTask)
+# run2_nanoAOD_ANY.toReplaceWith(
+#     nanoTableTaskCommon, _nanoTableTaskCommonRun2
+# )
 
 nanoSequenceCommon = cms.Sequence(nanoTableTaskCommon)
 
@@ -202,12 +202,15 @@ def nanoAOD_customizeCommon(process):
     process = nanoAOD_activateVID(process)
 
     run2_nanoAOD_106Xv2.toModify(
-        nanoAOD_addDeepInfoAK4CHS_switch, nanoAOD_addParticleNet_switch=True,
+        nanoAOD_addDeepInfoAK4_switch,
+        nanoAOD_addParticleNetUL_switch=True,
+        nanoAOD_addParticleNet_switch=True,
         nanoAOD_addRobustParTAK4Tag_switch=True,
     )
 
     # This function is defined in jetsAK4_Puppi_cff.py
     process = nanoAOD_addDeepInfoAK4(process,
+        addParticleNetUL=nanoAOD_addDeepInfoAK4_switch.nanoAOD_addParticleNetUL_switch,
         addParticleNet=nanoAOD_addDeepInfoAK4_switch.nanoAOD_addParticleNet_switch,
         addRobustParTAK4=nanoAOD_addDeepInfoAK4_switch.nanoAOD_addRobustParTAK4Tag_switch
     )

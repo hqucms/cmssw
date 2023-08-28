@@ -40,6 +40,16 @@ tightJetPuppiIdLepVeto = cms.EDProducer("PatJetIDValueMapProducer",
     ),
     src = cms.InputTag("updatedJetsPuppi")
 )
+run2_jme_2016.toModify(
+    tightJetPuppiId.filterParams, version="RUN2UL16PUPPI"
+).toModify(
+    tightJetPuppiIdLepVeto.filterParams, version="RUN2UL16PUPPI"
+)
+(run2_jme_2017 | run2_jme_2018).toModify(
+    tightJetPuppiId.filterParams, version="RUN2ULPUPPI"
+).toModify(
+    tightJetPuppiIdLepVeto.filterParams, version="RUN2ULPUPPI"
+)
 
 #HF shower shape recomputation
 from RecoJets.JetProducers.hfJetShowerShape_cfi import hfJetShowerShape
@@ -141,8 +151,12 @@ jetPuppiTable.variables.pt.precision=10
 ## - To be used in nanoAOD_customizeCommon() in nano_cff.py
 ###############################################################
 from PhysicsTools.PatAlgos.tools.jetTools import updateJetCollection
-def nanoAOD_addDeepInfoAK4(process,addParticleNet,addRobustParTAK4=False):
+def nanoAOD_addDeepInfoAK4(process,addParticleNetUL,addParticleNet,addRobustParTAK4=False):
     _btagDiscriminators=[]
+    if addParticleNetUL:
+        print("Updating process to run ParticleNetAK4 UL")
+        from RecoBTag.ONNXRuntime.pfParticleNetAK4_cff import _pfParticleNetAK4JetTagsProbs
+        _btagDiscriminators += _pfParticleNetAK4JetTagsProbs
     if addParticleNet:
         print("Updating process to run ParticleNetAK4")
         from RecoBTag.ONNXRuntime.pfParticleNetFromMiniAODAK4_cff import _pfParticleNetFromMiniAODAK4PuppiCentralJetTagsAll as pfParticleNetFromMiniAODAK4PuppiCentralJetTagsAll
@@ -168,6 +182,7 @@ def nanoAOD_addDeepInfoAK4(process,addParticleNet,addRobustParTAK4=False):
     return process
 
 nanoAOD_addDeepInfoAK4_switch = cms.PSet(
+    nanoAOD_addParticleNetUL_switch = cms.untracked.bool(False),
     nanoAOD_addParticleNet_switch = cms.untracked.bool(False),
     nanoAOD_addRobustParTAK4Tag_switch = cms.untracked.bool(False)
 )
