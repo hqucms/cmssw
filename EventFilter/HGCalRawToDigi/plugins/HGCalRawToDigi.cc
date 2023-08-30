@@ -15,7 +15,7 @@
 #include "DataFormats/HGCalDigi/interface/HGCalDigiCollections.h"
 #include "DataFormats/HGCalDigi/interface/HGCalDigiHostCollection.h"
 
-//#include "CondFormats/DataRecord/interface/HGCalCondSerializableConfigRcd.h"
+#include "CondFormats/DataRecord/interface/HGCalCondSerializableConfigRcd.h"
 #include "CondFormats/HGCalObjects/interface/HGCalCondSerializableConfig.h"
 #include "CondFormats/DataRecord/interface/HGCalCondSerializableModuleInfoRcd.h"
 #include "CondFormats/HGCalObjects/interface/HGCalCondSerializableModuleInfo.h"
@@ -37,8 +37,8 @@ private:
   const edm::EDPutTokenT<HGCalElecDigiCollection> elecDigisToken_;
   const edm::EDPutTokenT<HGCalElecDigiCollection> elecCMsToken_;
   const edm::EDPutTokenT<hgcaldigi::HGCalDigiHostCollection> elecDigisSoAToken_;
-  //edm::ESWatcher<HGCalCondSerializableConfigRcd> configWatcher_;
-  //edm::ESGetToken<HGCalCondSerializableConfig,HGCalCondSerializableConfigRcd> configToken_;
+  edm::ESWatcher<HGCalCondSerializableConfigRcd> configWatcher_;
+  edm::ESGetToken<HGCalCondSerializableConfig,HGCalCondSerializableConfigRcd> configToken_;
   edm::ESWatcher<HGCalCondSerializableModuleInfoRcd> eleMapWatcher_;
   edm::ESGetToken<HGCalCondSerializableModuleInfo, HGCalCondSerializableModuleInfoRcd> moduleInfoToken_;
 
@@ -49,7 +49,7 @@ private:
   const unsigned int flaggedECONDMax_;
   const unsigned int numERxsInECOND_;
   HGCalUnpackerConfig unpackerConfig_;
-  HGCalModuleConfig moduleConfig_; // current module
+  HGCalCondSerializableConfig config_; // current configuration
   std::unique_ptr<HGCalUnpacker> unpacker_; // remove the const here to initialize in begin run
 
   const bool fixCalibChannel_;
@@ -61,8 +61,8 @@ HGCalRawToDigi::HGCalRawToDigi(const edm::ParameterSet& iConfig)
       elecDigisToken_(produces<HGCalElecDigiCollection>("DIGI")),
       elecCMsToken_(produces<HGCalElecDigiCollection>("CM")),
       elecDigisSoAToken_(produces<hgcaldigi::HGCalDigiHostCollection>()),
-      //configToken_(esConsumes<HGCalCondSerializableConfig,HGCalCondSerializableConfigRcd>(
-      //    iConfig.getParameter<edm::ESInputTag>("configSource"))),
+      configToken_(esConsumes<HGCalCondSerializableConfig,HGCalCondSerializableConfigRcd>(
+          iConfig.getParameter<edm::ESInputTag>("configSource"))),
       moduleInfoToken_(esConsumes<HGCalCondSerializableModuleInfo,HGCalCondSerializableModuleInfoRcd,edm::Transition::BeginRun>(
           iConfig.getParameter<edm::ESInputTag>("moduleInfoSource"))),
       fedIds_(iConfig.getParameter<std::vector<unsigned int> >("fedIds")),
@@ -91,23 +91,24 @@ void HGCalRawToDigi::beginRun(edm::Run const& iRun, edm::EventSetup const& iSetu
   for(auto it : erxEnableBits_)
     LogDebug("HGCalRawToDigi::erxbits") << it.first << " = " << "0x" << std::hex << (uint32_t)(it.second) << std::dec << std::endl;
 }
-//
+
 void HGCalRawToDigi::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
 
   // retrieve the FED raw data
   const auto& raw_data = iEvent.get(fedRawToken_);
-  
-  //// retrieve configuration from YAML files
-  //if (configWatcher_.check(iSetup)) {
-  //  //auto conds = iSetup.getData(configToken_);
-  //  size_t nmods = conds.moduleConfigs.size();
-  //  edm::LogInfo("HGCalRawToDigi") << "Conditions retrieved for " << nmods << " modules:\n" << conds << std::endl;
-  //  for (auto it : conds.moduleConfigs) { // loop over map module electronicsId -> HGCalModuleConfig
-  //    HGCalModuleConfig moduleConfig(it.second);
-  //    edm::LogInfo("HGCalRawToDigi") << "  Module " << it.first << ": charMode=" << moduleConfig.charMode << std::endl;
-  //  }
-  //  moduleConfig_ = conds.moduleConfigs[0]; // for now use module with electronicsId = 0 as placeholder
-  //} // else: use previously loaded module configuration
+
+  // retrieve configuration from YAML files
+  if (configWatcher_.check(iSetup)) {
+    config_ = iSetup.getData(configToken_);
+    size_t nmods = config_.moduleConfigs.size();
+    //edm::LogInfo("HGCalRawToDigi::produce")
+    std::cout << "HGCalRawToDigi::produce: Configuration retrieved for " << nmods << " modules: " << config_ << std::endl;
+    for (auto it : config_.moduleConfigs) { // loop over map module electronicsId -> HGCalModuleConfig
+      HGCalModuleConfig moduleConfig(it.second);
+      //edm::LogInfo("HGCalRawToDigi::produce")
+      std::cout << "HGCalRawToDigi::produce:   Module " << it.first << ": charMode=" << moduleConfig.charMode << std::endl;
+    }
+  } // else: use previously loaded module configuration
 
   // prepare the output
   HGCalFlaggedECONDInfoCollection flagged_econds;
@@ -125,7 +126,7 @@ void HGCalRawToDigi::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) 
     const auto& fed_data = raw_data.FEDData(fed_id);
     if (fed_data.size() == 0)
       continue;
-    
+
     auto* ptr = fed_data.data();
     size_t fed_size = fed_data.size();
     std::vector<uint32_t> data_32bit;
@@ -144,10 +145,10 @@ void HGCalRawToDigi::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) 
       //                        (((i + 3) < fed_size) ? ((*(ptr + i + 3) & 0xff) << 0) : 0) );
     }
     
-    LogDebug("HGCalRawToDigi")
-              << std::dec << "FED ID=" << fed_id
-              << std::hex << " First words: 0x" << data_32bit[0] << " 0x" << data_32bit[1]  
-              << std::dec << " Data size=" << fed_size;
+    LogDebug("HGCalRawToDigi::produce")
+      << std::dec << "FED ID=" << fed_id
+      << std::hex << " First words: 0x" << data_32bit[0] << " 0x" << data_32bit[1]  
+      << std::dec << " Data size=" << fed_size;
 
     unpacker_->parseSLink(
         data_32bit,
@@ -165,18 +166,19 @@ void HGCalRawToDigi::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) 
         });
 
     auto channeldata = unpacker_->channelData();
-    auto commonModeSum=unpacker_->commonModeSum();
+    auto commonModeSum = unpacker_->commonModeSum();
     for (unsigned int i = 0; i < channeldata.size(); i++) {
       auto data = channeldata.at(i);
       const auto& id = data.id();
       auto idraw = id.raw();
       auto raw = data.raw();
-      LogDebug("HGCalRawToDigi:produce") << "channel data, id=" << idraw << ", raw=" << raw;
+      LogDebug("HGCalRawToDigi::produce") << "channel data, id=" << idraw << ", raw=" << raw;
       elec_digis.push_back(data);
       elecid.push_back(id.raw());
       tctp.push_back(data.tctp());
+      uint32_t modid = idraw & 0xFFFFFC00; // remove first 10 bits to get full electronics ID of ECON-D module 
       // FIXME: in the current HGCROC the calib channels (=18) is always in characterization model; to be fixed in ROCv3b
-      auto charMode = moduleConfig_.charMode || (fixCalibChannel_ && id.halfrocChannel() == 18);
+      auto charMode = config_.moduleConfigs[modid].charMode || (fixCalibChannel_ && id.halfrocChannel() == 18);
       adcm1.push_back(data.adcm1(charMode));
       adc.push_back(data.adc(charMode));
       tot.push_back(data.tot(charMode));
@@ -190,15 +192,15 @@ void HGCalRawToDigi::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) 
       const auto& id = cm.id();
       auto idraw = id.raw();
       auto raw = cm.raw();
-      LogDebug("HGCalRawToDigi:produce") << "common modes, id=" << idraw << ", raw=" << raw;
+      LogDebug("HGCalRawToDigi::produce") << "common modes, id=" << idraw << ", raw=" << raw;
       elec_cms.push_back(cm);
     }
 
-    //append flagged ECONDs
+    // append flagged ECONDs
     flagged_econds.insert(flagged_econds.end(), unpacker_->flaggedECOND().begin(), unpacker_->flaggedECOND().end());
   }
 
-  //auto elec_digis_soa = std::make_unique<hgcaldigi::HGCalDigiHostCollection>(elec_digis.size(), cms::alpakatools::host());
+  // auto elec_digis_soa = std::make_unique<hgcaldigi::HGCalDigiHostCollection>(elec_digis.size(), cms::alpakatools::host());
   hgcaldigi::HGCalDigiHostCollection elec_digis_soa(elec_digis.size(),cms::alpakatools::host());
   for (unsigned int i = 0; i < elecid.size(); i++) {
       elec_digis_soa.view()[i].electronicsId() = elecid.at(i);
@@ -211,19 +213,16 @@ void HGCalRawToDigi::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) 
       elec_digis_soa.view()[i].flags() = 0;
   }
 
-  //check how many flagged ECOND-s we have
+  // check how many flagged ECOND-s we have
   if(!flagged_econds.empty()) {
-
     LogDebug("HGCalRawToDigi:produce") << " caught " << flagged_econds.size() << " ECON-D with poor quality flags";
-    
     if (flagged_econds.size() > flaggedECONDMax_) {
       throw cms::Exception("HGCalRawToDigi:produce")
         << "Too many flagged ECON-Ds: " << flagged_econds.size() << " > " << flaggedECONDMax_ << ".";
     }
-
   }
-  
-  //put information to the event
+
+  // put information to the event
   iEvent.emplace(flaggedRawDataToken_,std::move(flagged_econds));
   iEvent.emplace(elecDigisToken_, std::move(elec_digis));
   iEvent.emplace(elecCMsToken_, std::move(elec_cms));
