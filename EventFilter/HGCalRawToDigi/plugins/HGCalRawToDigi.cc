@@ -62,9 +62,9 @@ HGCalRawToDigi::HGCalRawToDigi(const edm::ParameterSet& iConfig)
       elecCMsToken_(produces<HGCalElecDigiCollection>("CM")),
       elecDigisSoAToken_(produces<hgcaldigi::HGCalDigiHostCollection>()),
       //configToken_(esConsumes<HGCalCondSerializableConfig,HGCalCondSerializableConfigRcd>(
-      //    iConfig.getParameter<edm::ESInputTag>("config_label"))),
+      //    iConfig.getParameter<edm::ESInputTag>("configSource"))),
       moduleInfoToken_(esConsumes<HGCalCondSerializableModuleInfo,HGCalCondSerializableModuleInfoRcd,edm::Transition::BeginRun>(
-          iConfig.getParameter<edm::ESInputTag>("module_info_label"))),
+          iConfig.getParameter<edm::ESInputTag>("moduleInfoSource"))),
       fedIds_(iConfig.getParameter<std::vector<unsigned int> >("fedIds")),
       flaggedECONDMax_(iConfig.getParameter<unsigned int>("flaggedECONDMax")),
       numERxsInECOND_(iConfig.getParameter<unsigned int>("numERxsInECOND")),
@@ -230,7 +230,7 @@ void HGCalRawToDigi::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) 
   iEvent.emplace(elecDigisSoAToken_, std::move(elec_digis_soa));
 }
 
-//
+// fill descriptions
 void HGCalRawToDigi::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
   edm::ParameterSetDescription desc;
   desc.add<edm::InputTag>("src", edm::InputTag("rawDataCollector"));
@@ -249,8 +249,8 @@ void HGCalRawToDigi::fillDescriptions(edm::ConfigurationDescriptions& descriptio
   desc.add<unsigned int>("flaggedECONDMax", 200)->setComment("maximum number of flagged ECON-Ds");
   desc.add<std::vector<unsigned int> >("fedIds", {});
   desc.add<unsigned int>("numERxsInECOND", 12)->setComment("number of eRxs in each ECON-D payload");
-  desc.add<edm::ESInputTag>("config_label", edm::ESInputTag(""))->setComment("label for HGCalConfigESSourceFromYAML reader");
-  desc.add<edm::ESInputTag>("module_info_label", edm::ESInputTag(""))->setComment("label for HGCalModuleInfoESSource");
+  desc.add<edm::ESInputTag>("configSource", edm::ESInputTag(""))->setComment("label for HGCalConfigESSourceFromYAML reader");
+  desc.add<edm::ESInputTag>("moduleInfoSource", edm::ESInputTag(""))->setComment("label for HGCalModuleInfoESSource");
   descriptions.add("hgcalDigis", desc);
 }
 
