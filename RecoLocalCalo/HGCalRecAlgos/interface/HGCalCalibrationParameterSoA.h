@@ -8,21 +8,35 @@
 #include "DataFormats/SoATemplate/interface/SoALayout.h"
 #include "DataFormats/SoATemplate/interface/SoAView.h"
 
-#include "RecoLocalCalo/HGCalRecAlgos/interface/HGCalCalibrationParameterProvider.h"
+#include "RecoLocalCalo/HGCalRecAlgos/interface/HGCalCalibrationParameterIndex.h"
 
 namespace hgcalrechit {
 
-  // Generate structure of arrays (SoA) layout with RecHit dataformat
-  GENERATE_SOA_LAYOUT(HGCalCalibrationParameterSoALayout,
-                      SOA_SCALAR(HGCalCalibrationParameterProviderConfig, config),
+  // Generate structure of channel-level arrays (SoA) layout with RecHit dataformat
+  GENERATE_SOA_LAYOUT(HGCalCalibParamSoALayout,
+                      SOA_SCALAR(HGCalCalibrationParameterIndex, config),
                       SOA_COLUMN(float, pedestal),
                       SOA_COLUMN(float, CM_slope),
                       SOA_COLUMN(float, CM_offset),
                       SOA_COLUMN(float, BXm1_slope),
                       SOA_COLUMN(float, BXm1_offset)
   )
-  using HGCalCalibParamSoA = HGCalCalibrationParameterSoALayout<>;
-  
+  using HGCalCalibParamSoA = HGCalCalibParamSoALayout<>;
+
+  //// Generate structure of channel-level arrays (SoA) layout with RecHit dataformat
+  //GENERATE_SOA_LAYOUT(HGCalChannelConfigParamSoALayout,
+  //                    SOA_SCALAR(HGCalCalibrationParameterIndex, config),
+  //                    SOA_COLUMN(uint8_t, gain)
+  //)
+  //using HGCalChannelConfigParamSoA = HGCalChannelConfigParamSoALayout<>;
+
+  // Generate structure of ROC-level arrays (SoA) layout with RecHit dataformat
+  GENERATE_SOA_LAYOUT(HGCalConfigParamSoALayout,
+                      SOA_SCALAR(HGCalCalibrationParameterIndex, config),
+                      SOA_COLUMN(uint8_t, gain)
+  )
+  using HGCalConfigParamSoA = HGCalConfigParamSoALayout<>;
+
 }  // namespace hgcalrechit
 
 #endif  // RecoLocalCalo_HGCalRecAlgos_interface_HGCalCalibrationParameterSoA_h

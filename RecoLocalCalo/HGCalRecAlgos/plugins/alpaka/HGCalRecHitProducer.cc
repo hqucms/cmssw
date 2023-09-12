@@ -3,9 +3,11 @@
 #include "DataFormats/HGCalDigi/interface/alpaka/HGCalDigiDeviceCollection.h"
 #include "DataFormats/HGCalRecHit/interface/HGCalRecHitHostCollection.h"
 #include "DataFormats/HGCalRecHit/interface/alpaka/HGCalRecHitDeviceCollection.h"
+#include "FWCore/Framework/interface/MakerMacros.h"
 #include "FWCore/ParameterSet/interface/ConfigurationDescriptions.h"
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
 #include "FWCore/ParameterSet/interface/ParameterSetDescription.h"
+#include "FWCore/MessageLogger/interface/MessageLogger.h"
 #include "FWCore/Utilities/interface/InputTag.h"
 #include "FWCore/Utilities/interface/StreamID.h"
 #include "HeterogeneousCore/AlpakaCore/interface/alpaka/stream/EDProducer.h"
@@ -15,30 +17,19 @@
 #include "HeterogeneousCore/AlpakaInterface/interface/config.h"
 #include "HeterogeneousCore/AlpakaInterface/interface/CopyToDevice.h"
 #include "RecoLocalCalo/HGCalRecAlgos/plugins/alpaka/HGCalRecHitCalibrationAlgorithms.h"
-
-// includes for loading pedestal txt file
 #include <iomanip> // for std::setw
-#include "FWCore/Framework/interface/MakerMacros.h"
+#include <future>
+
+// includes for size, calibration, and configuration parameters
 #include "FWCore/Framework/interface/ESWatcher.h"
-#include "CondFormats/DataRecord/interface/HGCalCondSerializablePedestalsRcd.h"
-#include "CondFormats/HGCalObjects/interface/HGCalCondSerializablePedestals.h"
-#include "CondFormats/DataRecord/interface/HGCalCondSerializableConfigRcd.h"
-#include "CondFormats/HGCalObjects/interface/HGCalCondSerializableConfig.h"
-
-#include "RecoLocalCalo/HGCalRecAlgos/interface/HGCalCalibrationParameterHostCollection.h"
-#include "RecoLocalCalo/HGCalRecAlgos/interface/alpaka/HGCalCalibrationParameterDeviceCollection.h"
-
-// // include for save calibration parameter
-// #include "RecoLocalCalo/HGCalRecAlgos/interface/HGCalCalibrationParameterProvider.h"
-
-// includes for size parameters
 #include "CondFormats/DataRecord/interface/HGCalCondSerializableModuleInfoRcd.h"
 #include "CondFormats/HGCalObjects/interface/HGCalCondSerializableModuleInfo.h"
-
-// include for debug info
-#include "FWCore/MessageLogger/interface/MessageLogger.h"
-
-#include <future>
+#include "CondFormats/DataRecord/interface/HGCalCondSerializableConfigRcd.h"
+#include "CondFormats/HGCalObjects/interface/HGCalCondSerializableConfig.h"
+//#include "CondFormats/DataRecord/interface/HGCalCondSerializablePedestalsRcd.h"
+//#include "CondFormats/HGCalObjects/interface/HGCalCondSerializablePedestals.h"
+#include "RecoLocalCalo/HGCalRecAlgos/interface/HGCalCalibrationParameterHostCollection.h"
+#include "RecoLocalCalo/HGCalRecAlgos/interface/alpaka/HGCalCalibrationParameterDeviceCollection.h"
 
 template<class T> double duration(T t0,T t1)
 {
@@ -65,9 +56,11 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
   private:
     void produce(device::Event&, device::EventSetup const&) override;
     void beginRun(edm::Run const&, edm::EventSetup const&) override;
-    edm::ESWatcher<HGCalCondSerializableModuleInfoRcd> cfgWatcher_;
+    edm::ESWatcher<HGCalCondSerializableModuleInfoRcd> calibWatcher_;
+    edm::ESWatcher<HGCalCondSerializableConfigRcd> configWatcher_;
     const edm::EDGetTokenT<hgcaldigi::HGCalDigiHostCollection> digisToken_;
-    device::ESGetToken<hgcalrechit::HGCalCalibParamDeviceCollection, HGCalCondSerializableModuleInfoRcd> esToken_;
+    device::ESGetToken<hgcalrechit::HGCalCalibParamDeviceCollection, HGCalCondSerializableModuleInfoRcd> calibToken_;
+    device::ESGetToken<hgcalrechit::HGCalConfigParamDeviceCollection, HGCalCondSerializableConfigRcd> configToken_;
     const device::EDPutToken<hgcalrechit::HGCalRecHitDeviceCollection> recHitsToken_;
     HGCalRecHitCalibrationAlgorithms calibrator_;  // cannot be "const" because the calibrate() method is not const
     int n_hits_scale;
@@ -81,9 +74,10 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
           iConfig.getParameter<int>("n_threads"))},
         n_hits_scale{iConfig.getParameter<int>("n_hits_scale")}
     {
-      esToken_ = esConsumes(iConfig.getParameter<edm::ESInputTag>("eventSetupSource"));
+      calibToken_ = esConsumes(iConfig.getParameter<edm::ESInputTag>("calibSource"));
+      configToken_ = esConsumes(iConfig.getParameter<edm::ESInputTag>("configSource"));
     }
-    
+
   void HGCalRecHitProducer::beginRun(edm::Run const& iRun, edm::EventSetup const& iSetup){
     // auto moduleInfo = iSetup.getData(moduleInfoToken_);
     // std::tuple<uint16_t,uint8_t,uint8_t,uint8_t> denseIdxMax = moduleInfo.getMaxValuesForDenseIndex();    
@@ -97,23 +91,36 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
 
   void HGCalRecHitProducer::produce(device::Event& iEvent, device::EventSetup const& iSetup) {
     auto queue = iEvent.queue();
-    
+
     // Read digis
-    auto const& deviceCalibrationParameterProvider = iSetup.getData(esToken_);
+    auto const& deviceCalibParamProvider = iSetup.getData(calibToken_);
+    auto const& deviceConfigParamProvider = iSetup.getData(configToken_);
     auto const& hostDigisIn = iEvent.get(digisToken_);
 
     // Check if there are new conditions and read them
-    if (cfgWatcher_.check(iSetup)){
-      for(int i=0; i<deviceCalibrationParameterProvider.view().metadata().size(); i++) {
-          LogDebug("HGCalCalibrationParamter")
-                    << "idx = "         << i << ", "
-                    << "pedestal = "    << deviceCalibrationParameterProvider.view()[i].pedestal()    << ", "
-                    << "CM_slope = "    << deviceCalibrationParameterProvider.view()[i].CM_slope()    << ", "
-                    << "CM_offset = "   << deviceCalibrationParameterProvider.view()[i].CM_offset()   << ", "
-                    << "BXm1_slope = "  << deviceCalibrationParameterProvider.view()[i].BXm1_slope()  << ", "
-                    << "BXm1_offset = " << deviceCalibrationParameterProvider.view()[i].BXm1_offset() << std::endl;
+    #ifdef EDM_ML_DEBUG
+    if (calibWatcher_.check(iSetup)){
+      for(int i=0; i<deviceConfigParamProvider.view().metadata().size(); i++) {
+          LogDebug("HGCalCalibrationParameter")
+            << "gain = " << deviceConfigParamProvider.view()[i].gain();
       }
     }
+    #endif
+
+    // Check if there are new conditions and read them
+    #ifdef EDM_ML_DEBUG
+    if (configWatcher_.check(iSetup)){
+      for(int i=0; i<deviceCalibParamProvider.view().metadata().size(); i++) {
+          LogDebug("HGCalCalibrationParameter")
+              << "idx = "         << i << ", "
+              << "pedestal = "    << deviceCalibParamProvider.view()[i].pedestal()   << ", "
+              << "CM_slope = "    << deviceCalibParamProvider.view()[i].CM_slope()   << ", "
+              << "CM_offset = "   << deviceCalibParamProvider.view()[i].CM_offset()  << ", "
+              << "BXm1_slope = "  << deviceCalibParamProvider.view()[i].BXm1_slope() << ", "
+              << "BXm1_offset = " << deviceCalibParamProvider.view()[i].BXm1_offset(); //<< std::endl;
+      }
+    }
+    #endif
 
     int oldSize = hostDigisIn.view().metadata().size();
     int newSize = oldSize * n_hits_scale;
@@ -128,27 +135,28 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
       hostDigis.view()[i].toa() = hostDigisIn.view()[i%oldSize].toa();
       hostDigis.view()[i].cm() = hostDigisIn.view()[i%oldSize].cm();
       hostDigis.view()[i].flags() = hostDigisIn.view()[i%oldSize].flags();
+      //LogDebug("HGCalCalibrationParameter")
+      //  << "idx=" << i << ", elecId=" << hostDigis.view()[i].electronicsId()
+      //  << ", cm=" << hostDigis.view()[i].cm() << std::endl;
     }
 
-    LogDebug("HGCalRecHitProducer") << "Loaded host digis: " << hostDigis.view().metadata().size() << std::endl;
-
-    LogDebug("HGCalRecHitProducer") << "\n\nINFO -- calling calibrate method" << std::endl;
-
+    LogDebug("HGCalRecHitProducer") << "Loaded host digis: " << hostDigis.view().metadata().size(); //<< std::endl;
+    LogDebug("HGCalRecHitProducer") << "\n\nINFO -- calling calibrate method"; //<< std::endl;
     auto start = now();
-    auto recHits = calibrator_.calibrate(queue, hostDigis, deviceCalibrationParameterProvider);
+    auto recHits = calibrator_.calibrate(queue, hostDigis, deviceCalibParamProvider, deviceConfigParamProvider);
     alpaka::wait(queue);
     auto stop = now();
+    LogDebug("HGCalRecHitProducer") << "Time: " << duration(start, stop); //<< std::endl;
 
-    LogDebug("HGCalRecHitProducer") << "Time: " << duration(start, stop) << std::endl;
-
-    LogDebug("HGCalRecHitProducer") << "\n\nINFO -- storing rec hits in the event" << std::endl;
+    LogDebug("HGCalRecHitProducer") << "\n\nINFO -- storing rec hits in the event"; //<< std::endl;
     iEvent.emplace(recHitsToken_, std::move(*recHits));
   }
 
   void HGCalRecHitProducer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
     edm::ParameterSetDescription desc;
     desc.add<edm::InputTag>("digis", edm::InputTag("hgcalDigis", "DIGI", "TEST"));
-    desc.add("eventSetupSource", edm::ESInputTag{});
+    desc.add("calibSource", edm::ESInputTag{})->setComment("Label for calibration parameters");
+    desc.add("configSource", edm::ESInputTag{})->setComment("Label for ROC configuration parameters");
     desc.add<int>("n_blocks", -1);
     desc.add<int>("n_threads", -1);
     desc.add<int>("n_hits_scale", -1);
