@@ -366,12 +366,13 @@ void HGCalDigisClient::bookHistograms(DQMStore::IBooker& ibook, edm::Run const& 
 //
 void HGCalDigisClient::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
   edm::ParameterSetDescription desc;
-  desc.add<edm::InputTag>("Digis",edm::InputTag("hgcalDigis","DIGI"));
-  desc.add<edm::InputTag>("FlaggedECONDInfo",edm::InputTag("hgcalDigis","UnpackerFlags"));
-  desc.add<edm::InputTag>("MetaData",edm::InputTag("hgcalEmulatedSlinkRawData","hgcalMetaData"));
-  desc.add<edm::ESInputTag>("ModuleMapping",edm::ESInputTag(""));
-  desc.add<unsigned>("prescale", 1);
+  desc.add<edm::InputTag>("Digis", edm::InputTag("hgcalDigis", ""));
+  desc.add<edm::InputTag>("FlaggedECONDInfo", edm::InputTag("hgcalDigis", "UnpackerFlags"));
+  desc.add<edm::InputTag>("MetaData", edm::InputTag("hgcalEmulatedSlinkRawData", "hgcalMetaData"));
+  desc.add<edm::ESInputTag>("ModuleMapping", edm::ESInputTag(""));
+  desc.add<unsigned>("Prescale", 1);
   desc.add<unsigned>("MinimumNumEvents", 10000);
+  descriptions.addWithDefaultLabel(desc);
 }
 
 // define this as a plug-in

@@ -12,8 +12,7 @@
 
 //Framework
 #include "FWCore/Framework/interface/Frameworkfwd.h"
-#include "FWCore/ParameterSet/interface/ParameterSet.h"
-#include "FWCore/ParameterSet/interface/ParameterSetDescription.h"
+#include "FWCore/Framework/interface/MakerMacros.h"
 #include "FWCore/Utilities/interface/InputTag.h"
 #include "FWCore/ServiceRegistry/interface/Service.h"
 #include "FWCore/Framework/interface/ESWatcher.h"
@@ -85,13 +84,13 @@ HGCalDigisClientHarvester::HGCalDigisClientHarvester(const edm::ParameterSet& iC
 }
 
 //
-void HGCalDigisClientHarvester::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
+void HGCalDigisClientHarvester::fillDescriptions(edm::ConfigurationDescriptions &descriptions) {
   edm::ParameterSetDescription desc;
-  desc.add<edm::ESInputTag>("ModuleMapping",edm::ESInputTag(""));
-  desc.add<std::string>("HexTemplateFile","/eos/cms/store/group/dpg_hgcal/comm_hgcal/ykao/hexagons_20230801.root");
-  desc.add<std::string>("Level0CalibOut","level0_calibration_parameters.txt");
+  desc.add<edm::ESInputTag>("ModuleMapping", edm::ESInputTag(""));
+  desc.add<std::string>("HexTemplateFile", "/eos/cms/store/group/dpg_hgcal/comm_hgcal/ykao/hexagons_20230801.root");
+  desc.add<std::string>("Level0CalibOut", "level0_calib_params.txt");
+  descriptions.addWithDefaultLabel(desc);
 }
-
 
 //
 HGCalDigisClientHarvester::~HGCalDigisClientHarvester()
@@ -275,5 +274,4 @@ void HGCalDigisClientHarvester::dqmEndJob(DQMStore::IBooker& ibooker, DQMStore::
 
 }
 
-#include "FWCore/Framework/interface/MakerMacros.h"
 DEFINE_FWK_MODULE(HGCalDigisClientHarvester);
