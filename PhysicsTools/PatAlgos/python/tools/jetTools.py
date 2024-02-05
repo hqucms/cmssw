@@ -1533,9 +1533,12 @@ class AddJetCollection(ConfigToolBase):
                                     process, task)
 
                 knownModules.append('patJetFlavourAssociation'+_labelName+postfix)
-            if 'Puppi' in jetSource.value() and pfCandidates.value() == 'particleFlow':
-                _newPatJetFlavourAssociation=getattr(process, 'patJetFlavourAssociation'+_labelName+postfix)
-                _newPatJetFlavourAssociation.weights = cms.InputTag("puppi")
+            if 'Puppi' in jetSource.value():
+                _newPatJetFlavourAssociation = getattr(process, 'patJetFlavourAssociation' + _labelName + postfix)
+                if pfCandidates.value() == 'particleFlow':
+                    _newPatJetFlavourAssociation.weights = cms.InputTag("puppi")
+                elif pfCandidates.value() == 'packedPFCandidates':
+                    _newPatJetFlavourAssociation.weights = cms.InputTag(setupPuppiForPackedPF(process)[0])
             ## modify new patJets collection accordingly
             _newPatJets.JetFlavourInfoSource.setModuleLabel('patJetFlavourAssociation'+_labelName+postfix)
             ## if the jets is actually a subjet
