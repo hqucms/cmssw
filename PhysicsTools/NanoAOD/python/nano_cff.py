@@ -204,8 +204,8 @@ def nanoAOD_customizeCommon(process):
     run2_nanoAOD_106Xv2.toModify(
         nanoAOD_addDeepInfoAK4_switch,
         nanoAOD_addParticleNetUL_switch=True,
-        nanoAOD_addParticleNet_switch=True,
-        nanoAOD_addRobustParTAK4Tag_switch=True,
+        nanoAOD_addParticleNet_switch=False,
+        nanoAOD_addRobustParTAK4Tag_switch=False,
     )
 
     # This function is defined in jetsAK4_Puppi_cff.py
@@ -239,7 +239,7 @@ def nanoAOD_customizeCommon(process):
         runPNetAK4 = cms.bool(False),
         addPNet = cms.bool(True)
     )
-    (run2_nanoAOD_106Xv2 | run3_nanoAOD_122).toModify(
+    (run3_nanoAOD_122).toModify(
         nanoAOD_tau_switch, idsToAdd = ["deepTau2018v2p5"]
     ).toModify(
         process, lambda p : nanoAOD_addTauIds(p, nanoAOD_tau_switch.idsToAdd.value())
