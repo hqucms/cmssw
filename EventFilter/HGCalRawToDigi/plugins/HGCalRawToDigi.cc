@@ -12,6 +12,15 @@
 #include "DataFormats/HGCalDigi/interface/HGCalElectronicsId.h"
 #include "DataFormats/HGCalDigi/interface/HGCalDigiHostCollection.h"
 
+#include "CondFormats/DataRecord/interface/HGCalMappingModuleIndexerRcd.h"
+// #include "CondFormats/DataRecord/interface/HGCalMappingModuleRcd.h"
+#include "CondFormats/DataRecord/interface/HGCalMappingCellIndexerRcd.h"
+// #include "CondFormats/DataRecord/interface/HGCalMappingCellRcd.h"
+#include "CondFormats/HGCalObjects/interface/HGCalMappingModuleIndexer.h"
+#include "CondFormats/HGCalObjects/interface/HGCalMappingCellIndexer.h"
+// #include "CondFormats/HGCalObjects/interface/alpaka/HGCalMappingParameterDeviceCollection.h"
+// #include "Geometry/HGCalMapping/interface/HGCalMappingTools.h"
+
 // #include "EventFilter/HGCalRawToDigi/interface/HGCalUnpacker.h"
 
 // #include "CondFormats/DataRecord/interface/HGCalCondSerializableConfigRcd.h"
@@ -29,11 +38,22 @@ private:
   void produce(edm::Event&, const edm::EventSetup&) override;
   void beginRun(edm::Run const&, edm::EventSetup const&) override;
 
+  // input tokens
   const edm::EDGetTokenT<FEDRawDataCollection> fedRawToken_;
+
+  // output tokens
+  const edm::EDPutTokenT<hgcaldigi::HGCalDigiHostCollection> digisToken_;
   // const edm::EDPutTokenT<HGCalFlaggedECONDInfoCollection> flaggedRawDataToken_;
   // const edm::EDPutTokenT<HGCalElecDigiCollection> elecDigisToken_;
   // const edm::EDPutTokenT<HGCalElecDigiCollection> elecCMsToken_;
-  const edm::EDPutTokenT<hgcaldigi::HGCalDigiHostCollection> digisToken_;
+
+  // config tokens and objects
+  edm::ESWatcher<HGCalMappingModuleIndexerRcd> mapWatcher_;
+  edm::ESGetToken<HGCalMappingCellIndexer, HGCalMappingCellIndexerRcd> cellIndexToken_;
+  edm::ESGetToken<HGCalMappingModuleIndexer, HGCalMappingModuleIndexerRcd> moduleIndexToken_;
+  HGCalMappingCellIndexer cellIndexer_;
+  HGCalMappingModuleIndexer moduleIndexer_;
+
   // edm::ESWatcher<HGCalCondSerializableConfigRcd> configWatcher_;
   // edm::ESGetToken<HGCalCondSerializableConfig, HGCalCondSerializableConfigRcd> configToken_;
   // edm::ESWatcher<HGCalCondSerializableModuleInfoRcd> eleMapWatcher_;
@@ -42,6 +62,7 @@ private:
   // HGCalCondSerializableModuleInfo::ERxBitPatternMap erxEnableBits_;
   // std::map<uint16_t, uint16_t> fed2slink_;
 
+  // config params
   const std::vector<unsigned int> fedIds_;
   // const unsigned int flaggedECONDMax_;
   // const unsigned int numERxsInECOND_;
@@ -54,15 +75,12 @@ private:
 
 HGCalRawToDigi::HGCalRawToDigi(const edm::ParameterSet& iConfig)
     : fedRawToken_(consumes<FEDRawDataCollection>(iConfig.getParameter<edm::InputTag>("src"))),
+      digisToken_(produces<hgcaldigi::HGCalDigiHostCollection>()),
       // flaggedRawDataToken_(produces<HGCalFlaggedECONDInfoCollection>("UnpackerFlags")),
       // elecDigisToken_(produces<HGCalElecDigiCollection>("DIGI")),
       // elecCMsToken_(produces<HGCalElecDigiCollection>("CM")),
-      digisToken_(produces<hgcaldigi::HGCalDigiHostCollection>()),
-      // configToken_(esConsumes<HGCalCondSerializableConfig, HGCalCondSerializableConfigRcd>(
-      //     iConfig.getParameter<edm::ESInputTag>("configSource"))),
-      // moduleInfoToken_(
-      //     esConsumes<HGCalCondSerializableModuleInfo, HGCalCondSerializableModuleInfoRcd, edm::Transition::BeginRun>(
-      //         iConfig.getParameter<edm::ESInputTag>("moduleInfoSource"))),
+      cellIndexToken_(esConsumes()),
+      moduleIndexToken_(esConsumes()),
       fedIds_(iConfig.getParameter<std::vector<unsigned int> >("fedIds")),
       // flaggedECONDMax_(iConfig.getParameter<unsigned int>("flaggedECONDMax")),
       // numERxsInECOND_(iConfig.getParameter<unsigned int>("numERxsInECOND")),
@@ -94,6 +112,15 @@ void HGCalRawToDigi::beginRun(edm::Run const& iRun, edm::EventSetup const& iSetu
 }
 
 void HGCalRawToDigi::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
+  // retrieve logical mapping
+  if (mapWatcher_.check(iSetup)) {
+    moduleIndexer_ = iSetup.getData(moduleIndexToken_);
+    cellIndexer_ = iSetup.getData(cellIndexToken_);
+  }
+  hgcaldigi::HGCalDigiHostCollection digis(cellIndexer_.maxDenseIndex(), cms::alpakatools::host());
+
+  std::cout << "Created DIGIs SOA with " << digis.view().metadata().size() << " entries" << std::endl;
+
   // retrieve the FED raw data
   const auto& raw_data = iEvent.get(fedRawToken_);
 
@@ -228,8 +255,7 @@ void HGCalRawToDigi::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) 
   // iEvent.emplace(elecDigisToken_, std::move(elec_digis));
   // iEvent.emplace(elecCMsToken_, std::move(elec_cms));
 
-  hgcaldigi::HGCalDigiHostCollection digis(10, cms::alpakatools::host());
-  for (unsigned int i = 0; i < 10; i++) {
+  for (unsigned int i = 0; i < cellIndexer_.maxDenseIndex(); i++) {
     digis.view()[i].electronicsId() = 0;
     digis.view()[i].tctp() = 0;
     digis.view()[i].adcm1() = 0;
