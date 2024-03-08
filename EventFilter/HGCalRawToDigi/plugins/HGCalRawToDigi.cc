@@ -63,12 +63,10 @@ private:
   // std::map<uint16_t, uint16_t> fed2slink_;
 
   // config params
-  const std::vector<unsigned int> fedIds_;
   // const unsigned int flaggedECONDMax_;
-  // const unsigned int numERxsInECOND_;
   // HGCalUnpackerConfig unpackerConfig_;
   // HGCalCondSerializableConfig config_;       // current configuration
-  // std::unique_ptr<HGCalUnpacker> unpacker_;  // remove the const here to initialize in begin run
+  HGCalUnpacker unpacker_;  // remove the const here to initialize in begin run
 
   const bool fixCalibChannel_;
 };
@@ -81,9 +79,7 @@ HGCalRawToDigi::HGCalRawToDigi(const edm::ParameterSet& iConfig)
       // elecCMsToken_(produces<HGCalElecDigiCollection>("CM")),
       cellIndexToken_(esConsumes()),
       moduleIndexToken_(esConsumes()),
-      fedIds_(iConfig.getParameter<std::vector<unsigned int> >("fedIds")),
       // flaggedECONDMax_(iConfig.getParameter<unsigned int>("flaggedECONDMax")),
-      // numERxsInECOND_(iConfig.getParameter<unsigned int>("numERxsInECOND")),
       // unpackerConfig_(HGCalUnpackerConfig{.sLinkBOE = iConfig.getParameter<unsigned int>("slinkBOE"),
       //                                     .cbHeaderMarker = iConfig.getParameter<unsigned int>("cbHeaderMarker"),
       //                                     .econdHeaderMarker = iConfig.getParameter<unsigned int>("econdHeaderMarker"),
@@ -92,7 +88,17 @@ HGCalRawToDigi::HGCalRawToDigi(const edm::ParameterSet& iConfig)
       fixCalibChannel_(iConfig.getParameter<bool>("fixCalibChannel")) {}
 
 void HGCalRawToDigi::beginRun(edm::Run const& iRun, edm::EventSetup const& iSetup) {
+  // retrieve logical mapping
+  if (mapWatcher_.check(iSetup)) {
+    moduleIndexer_ = iSetup.getData(moduleIndexToken_);
+    cellIndexer_ = iSetup.getData(cellIndexToken_);
+  }
+
+  // retrieve configs: TODO
   // auto moduleInfo = iSetup.getData(moduleInfoToken_);
+
+  // init unpacker
+
   // std::tuple<uint16_t, uint8_t, uint8_t, uint8_t> denseIdxMax = moduleInfo.getMaxValuesForDenseIndex();
   // unpackerConfig_.sLinkCaptureBlockMax = std::get<1>(denseIdxMax);
   // unpackerConfig_.captureBlockECONDMax = std::get<2>(denseIdxMax);
@@ -112,60 +118,21 @@ void HGCalRawToDigi::beginRun(edm::Run const& iRun, edm::EventSetup const& iSetu
 }
 
 void HGCalRawToDigi::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
-  // retrieve logical mapping
-  if (mapWatcher_.check(iSetup)) {
-    moduleIndexer_ = iSetup.getData(moduleIndexToken_);
-    cellIndexer_ = iSetup.getData(cellIndexToken_);
-  }
   hgcaldigi::HGCalDigiHostCollection digis(cellIndexer_.maxDenseIndex(), cms::alpakatools::host());
-
   std::cout << "Created DIGIs SOA with " << digis.view().metadata().size() << " entries" << std::endl;
+
+  // TODO
+  hgcaldigi::HGCalDigiHostCollection common_modes(cellIndexer_.maxDenseIndex(), cms::alpakatools::host());
+  std::vector<HGCalECONDFlags> errors;
 
   // retrieve the FED raw data
   const auto& raw_data = iEvent.get(fedRawToken_);
 
-  // // retrieve configuration from YAML files
-  // if (configWatcher_.check(iSetup)) {
-  //   config_ = iSetup.getData(configToken_);
-  //   size_t nmods = config_.moduleConfigs.size();
-  //   edm::LogInfo("HGCalRawToDigi::produce")
-  //       << "Configuration retrieved for " << nmods << " modules: " << config_;  //<< std::endl;
-  //   for (auto it : config_.moduleConfigs) {  // loop over map module electronicsId -> HGCalModuleConfig
-  //     HGCalModuleConfig moduleConfig(it.second);
-  //     //edm::LogInfo("HGCalRawToDigi::produce")
-  //     std::cout << "  Module " << it.first << ": charMode=" << moduleConfig.charMode << std::endl;
-  //   }
-  // }  // else: use previously loaded module configuration
-
-  // prepare the output
-  // HGCalFlaggedECONDInfoCollection flagged_econds;
-  // HGCalDigiCollection digis;
-  // HGCalElecDigiCollection elec_digis;
-  // HGCalElecDigiCollection elec_cms;
-  // std::vector<uint32_t> elecid;
-  // std::vector<uint8_t> tctp;
-  // std::vector<uint16_t> adcm1;
-  // std::vector<uint16_t> adc;
-  // std::vector<uint16_t> tot;
-  // std::vector<uint16_t> toa;
-  // std::vector<uint16_t> cm;
-  for (const auto& fed_id : fedIds_) {
-    const auto& fed_data = raw_data.FEDData(fed_id);
+  for (const unsigned fedId = 0; fedId < moduleIndexer_.nfeds_; ++fedId) {
+    const auto& fed_data = raw_data.FEDData(fedId);
     if (fed_data.size() == 0)
       continue;
-
-    const auto* ptr = reinterpret_cast<const uint64_t*>(fed_data.data());
-    const auto* ptr_end = reinterpret_cast<const uint64_t*>(fed_data.data() + fed_data.size());
-
-    std::cout << "fedId = " << fed_id << " nwords = " << std::distance(ptr, ptr_end) << std::endl;
-    for (unsigned iword = 0; ptr < ptr_end; ++iword) {
-      std::cout << std::setw(8) << iword << ": 0x" << std::hex << std::setfill('0') << std::setw(16) << *ptr << " ("
-                << std::setfill('0') << std::setw(8) << *(reinterpret_cast<const uint32_t*>(ptr) + 1) << " "
-                << std::setfill('0') << std::setw(8) << *reinterpret_cast<const uint32_t*>(ptr) << ")" << std::dec
-                << std::endl;
-      ++ptr;
-    }
-    std::cout << "@@@\n";
+    unpacker_->parseFEDData(fedId, fed_data, digis, common_modes, errors);
   }
 
   //   size_t fed_size = fed_data.size();
@@ -177,7 +144,7 @@ void HGCalRawToDigi::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) 
   //                              (((i + 3) < fed_size) ? ((*(ptr + i + 3) & 0xff) << 24) : 0)));
   //   }
 
-  //   LogDebug("HGCalRawToDigi::produce") << std::dec << "FED ID=" << fed_id << std::hex << " First words: 0x"
+  //   LogDebug("HGCalRawToDigi::produce") << std::dec << "FED ID=" << fedId << std::hex << " First words: 0x"
   //                                       << data_32bit[0] << " 0x" << data_32bit[1] << std::dec
   //                                       << " Data size=" << fed_size;
 
@@ -188,16 +155,16 @@ void HGCalRawToDigi::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) 
   //           return this->erxEnableBits_[HGCalCondSerializableModuleInfo::erxBitPatternMapDenseIndex(
   //               sLink, captureBlock, econd, 0, 0)];
   //         },
-  //         [this](uint16_t fedid) {
-  //           if (auto it = this->fed2slink_.find(fedid); it != this->fed2slink_.end()) {
-  //             return this->fed2slink_.at(fedid);
+  //         [this](uint16_t fedId) {
+  //           if (auto it = this->fed2slink_.find(fedId); it != this->fed2slink_.end()) {
+  //             return this->fed2slink_.at(fedId);
   //           } else {
   //             // FIXME: throw an error or return 0?
   //             return (uint16_t)0;
   //           }
   //         });
   //   } catch (cms::Exception& e) {
-  //     std::cout << "An exeption was caught while decoding raw data for FED " << std::dec << (uint32_t)fed_id
+  //     std::cout << "An exeption was caught while decoding raw data for FED " << std::dec << (uint32_t)fedId
   //               << std::endl;
   //     std::cout << e.what() << std::endl;
   //     std::cout << "Event is: " << std::endl;
