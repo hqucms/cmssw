@@ -22,7 +22,7 @@ void HGCalUnpacker::parseFEDData(unsigned fedId,
 
   auto to_32b_words = [](const uint64_t* ptr_64b) {
     auto* ptr_32b = reinterpret_cast<const uint32_t*>(ptr_64b);
-    return std::array<uint32_t, 2>{ptr_32b[1], ptr_32b[0]};
+    return std::array<uint32_t, 2>({ptr_32b[1], ptr_32b[0]});
   };
 
   const auto* ptr = header;
