@@ -21,7 +21,7 @@
 // #include "CondFormats/HGCalObjects/interface/alpaka/HGCalMappingParameterDeviceCollection.h"
 // #include "Geometry/HGCalMapping/interface/HGCalMappingTools.h"
 
-// #include "EventFilter/HGCalRawToDigi/interface/HGCalUnpacker.h"
+#include "EventFilter/HGCalRawToDigi/interface/HGCalUnpacker.h"
 
 // #include "CondFormats/DataRecord/interface/HGCalCondSerializableConfigRcd.h"
 // #include "CondFormats/HGCalObjects/interface/HGCalCondSerializableConfig.h"
@@ -128,11 +128,11 @@ void HGCalRawToDigi::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) 
   // retrieve the FED raw data
   const auto& raw_data = iEvent.get(fedRawToken_);
 
-  for (const unsigned fedId = 0; fedId < moduleIndexer_.nfeds_; ++fedId) {
+  for (unsigned fedId = 0; fedId < moduleIndexer_.nfeds_; ++fedId) {
     const auto& fed_data = raw_data.FEDData(fedId);
     if (fed_data.size() == 0)
       continue;
-    unpacker_->parseFEDData(fedId, fed_data, digis, common_modes, errors);
+    unpacker_.parseFEDData(fedId, fed_data, digis, common_modes, errors);
   }
 
   //   size_t fed_size = fed_data.size();
