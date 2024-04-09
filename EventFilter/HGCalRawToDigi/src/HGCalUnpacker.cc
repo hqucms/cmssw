@@ -34,13 +34,15 @@ void HGCalUnpacker::parseFEDData(unsigned fedId,
     ++ptr;
   }
   std::cout << "@@@\n";
+  ptr = header;
 
   // check SLink header (128b)
   // TODO
   ptr += 2;
 
   // parse capture blocks
-  for (uint16_t captureblockIdx = 0; captureblockIdx < HGCalMappingModuleIndexer::maxCBperFED_; captureblockIdx++) {
+  for (uint16_t captureblockIdx = 0; captureblockIdx < HGCalMappingModuleIndexer::maxCBperFED_ && ptr < trailer - 2;
+       captureblockIdx++) {
     // check capture block header (64b)
     std::cout << "@" << std::setw(8) << std::distance(header, ptr) << ": 0x" << std::hex << std::setfill('0')
               << std::setw(16) << *ptr << std::dec << std::endl;
@@ -54,10 +56,11 @@ void HGCalUnpacker::parseFEDData(unsigned fedId,
       auto econd_pkt_status = (cb_header >> (3 * econdIdx)) & 0b111;
       std::cout << "fedId = " << fedId << ", captureblockIdx = " << captureblockIdx << ", econdIdx = " << econdIdx
                 << ", econd_pkt_status = " << econd_pkt_status << std::endl;
-      bool pkt_exists = (econd_pkt_status == backend::ECONDPacketStatus::Normal) ||
-                        (econd_pkt_status == backend::ECONDPacketStatus::PayloadCRCError) ||
-                        (econd_pkt_status == backend::ECONDPacketStatus::EventIDMismatch) ||
-                        (econd_pkt_status == backend::ECONDPacketStatus::BCIDOrbitIDMismatch);
+      bool pkt_exists =
+          (econd_pkt_status == backend::ECONDPacketStatus::Normal) ||
+          (econd_pkt_status == backend::ECONDPacketStatus::PayloadCRCError) ||
+          (econd_pkt_status == backend::ECONDPacketStatus::EventIDMismatch) ||
+          (econd_pkt_status == backend::ECONDPacketStatus::BCIDOrbitIDMismatch);  // TODO: `BCIDOrbitIDMismatch`
       if (!pkt_exists) {
         continue;
       }
@@ -69,20 +72,26 @@ void HGCalUnpacker::parseFEDData(unsigned fedId,
       ++ptr;
 
       // ECON-D payload length (num of 32b words)
-      // the +1 is for the trailing IDLE word (32b)
-      const auto econd_payload_length =
-          ((econd_headers[0] >> ECOND_FRAME::PAYLOAD_POS) & ECOND_FRAME::PAYLOAD_MASK) + 1;
+      // NOTE: in the capture blocks, ECON-D packets do not have the trailing IDLE word
+      const auto econd_payload_length = ((econd_headers[0] >> ECOND_FRAME::PAYLOAD_POS) & ECOND_FRAME::PAYLOAD_MASK);
 
       std::cout << "fedId = " << fedId << ", captureblockIdx = " << captureblockIdx << ", econdIdx = " << econdIdx
                 << ", econd_headers = " << std::hex << std::setfill('0') << std::setw(8) << econd_headers[0] << " "
                 << econd_headers[1] << std::dec << ", econd_payload_length = " << econd_payload_length << std::endl;
 
+
+
       // forward ptr to the next ECON-D; use integer division with (... + 1) / 2 to round up
       ptr += (econd_payload_length + 1) / 2;
+    }
+
+    // skip the padding word as capture blocks are padded to 128b
+    if (std::distance(ptr, header) % 2) {
+      ++ptr;
     }
   }
 
   // check SLink trailer (128b)
   // TODO
-  // assert(ptr + 2 == trailer);
+  assert(ptr + 2 == trailer);
 }
