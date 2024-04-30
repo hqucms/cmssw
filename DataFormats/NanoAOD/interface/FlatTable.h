@@ -123,6 +123,19 @@ namespace nanoaod {
       flatTableHelper::MaybeMantissaReduce<T>(mantissaBits).bulk(columnData<T>(columns_.size() - 1));
     }
 
+    template <typename T>
+    void addColumn(
+        const std::string &name, const T *values, size_t size, const std::string &docString, int mantissaBits = -1) {
+      if (columnIndex(name) != -1)
+        throw cms::Exception("LogicError", "Duplicated column: " + name);
+      if (size != size())
+        throw cms::Exception("LogicError", "Mismatched size for " + name);
+      auto &vec = bigVector<T>();
+      columns_.emplace_back(name, docString, defaultColumnType<T>(), vec.size());
+      vec.insert(vec.end(), values, values + size);
+      flatTableHelper::MaybeMantissaReduce<T>(mantissaBits).bulk(columnData<T>(columns_.size() - 1));
+    }
+
     template <typename T, typename C>
     void addColumnValue(const std::string &name, const C &value, const std::string &docString, int mantissaBits = -1) {
       if (!singleton())
