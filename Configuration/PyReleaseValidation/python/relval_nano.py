@@ -244,7 +244,7 @@ steps['ZeroBias2024RAW14.0'] = {'INPUT': InputInfo(location='STD', ls=lumis_Run2
 steps['TestEnablesEcalHcal2024RAW14.0'] = {'INPUT': InputInfo(location='STD', ls={381946: [[1, 15]]},
                                                               dataSet='/TestEnablesEcalHcal/Run2024F-Express-v1/RAW')}
 
-steps['NANO_data14.0'] = merge([{'--era': 'Run3', '--conditions': 'auto:run3_data_prompt'},
+steps['NANO_data14.0'] = merge([{'--era': 'Run3_2024', '--conditions': 'auto:run3_data_prompt'},
                                 _NANO_data])
 
 steps['NANO_data14.0_prompt'] = merge([{'-s': 'NANO:@Prompt,DQM:@nanoAODDQM', '-n': '1000'},
@@ -376,9 +376,7 @@ workflows[_wfn()] = ['BTVNANOdata140Xrun3', ['MuonEG2024MINIAOD14.0', 'BTVNANO_d
 workflows[_wfn()] = ['jmeNANOdata140Xrun3', ['MuonEG2024MINIAOD14.0', 'jmeNANO_data14.0']]
 workflows[_wfn()] = ['jmeNANOrePuppidata140Xrun3', ['MuonEG2024MINIAOD14.0', 'jmeNANO_rePuppi_data14.0']]
 workflows[_wfn()] = ['lepTrackInfoNANOdata140Xrun3', ['MuonEG2024MINIAOD14.0', 'lepTrackInfoNANO_data14.0']]
-
-# to be updated based on https://github.com/cms-sw/cmssw/pull/44970/files
-# workflows[_wfn()] = ['ScoutingNANOdata140Xrun3', ['ScoutingPFRun32024RAW14.0', 'scoutingNANO_data14.0']]
+workflows[_wfn()] = ['ScoutingNANOdata140Xrun3', ['ScoutingPFRun32024RAW14.0', 'scoutingNANO_data14.0']]
 
 # DPG custom NANOs, data
 _wfn.subnext()
