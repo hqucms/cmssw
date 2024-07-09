@@ -71,7 +71,7 @@ steps['HRV_NANO_mc'] = _HARVEST_mc
 steps['HRV_NANO_data'] = _HARVEST_data
 
 ################################################################
-# 10.6 INPUT and worflows
+# 10.6 INPUT and workflows
 steps['TTbarMINIAOD10.6_UL16v2'] = {'INPUT': InputInfo(
     location='STD', dataSet='/TTJets_SingleLeptFromT_TuneCP5_13TeV-madgraphMLM-pythia8/RunIISummer20UL16MiniAODv2-106X_mcRun2_asymptotic_v17-v2/MINIAODSIM')}
 steps['NANO_mc10.6ul16v2'] = merge([{'--era': 'Run2_2016,run2_nanoAOD_106Xv2',
@@ -93,7 +93,7 @@ steps['NANO_mc10.6ul18v2'] = merge([{'--era': 'Run2_2018,run2_nanoAOD_106Xv2',
 # HIPM_UL2016_MiniAODv2 campaign is CMSSW_10_6_25
 steps['MuonEG2016MINIAOD10.6v2'] = {'INPUT': InputInfo(location='STD', ls=run2_lumis,
                                                        dataSet='/MuonEG/Run2016E-HIPM_UL2016_MiniAODv2-v2/MINIAOD')}
-steps['NANO_data10.6ul16v2'] = merge([{'--era': 'Run2_2016,run2_nanoAOD_106Xv2,tracker_apv_vfp30_2016',
+steps['NANO_data10.6ul16v2'] = merge([{'--era': 'Run2_2016_HIPM,run2_nanoAOD_106Xv2',
                                      '--conditions': 'auto:run2_data'},
                                       _NANO_data])
 # UL2017_MiniAODv2 campaign is CMSSW_10_6_20
@@ -109,6 +109,34 @@ steps['MuonEG2018MINIAOD10.6v2'] = {'INPUT': InputInfo(location='STD', ls=run2_l
 steps['NANO_data10.6ul18v2'] = merge([{'--era': 'Run2_2018,run2_nanoAOD_106Xv2',
                                      '--conditions': 'auto:run2_data'},
                                       _NANO_data])
+
+################################################################
+# Run2UL re-MINI/NANO
+steps['NANO_mc_UL16APVreMINI'] = merge([{'--era': 'Run2_2016_HIPM',
+                                         '--conditions': 'auto:run2_mc_pre_vfp'},
+                                        _NANO_mc])
+steps['NANO_mc_UL16reMINI'] = merge([{'--era': 'Run2_2016',
+                                      '--conditions': 'auto:run2_mc'},
+                                     _NANO_mc])
+steps['NANO_mc_UL17reMINI'] = merge([{'--era': 'Run2_2017',
+                                      '--conditions': 'auto:phase1_2017_realistic'},
+                                     _NANO_mc])
+steps['NANO_mc_UL18reMINI'] = merge([{'--era': 'Run2_2018',
+                                      '--conditions': 'auto:phase1_2018_realistic'},
+                                     _NANO_mc])
+
+steps['NANO_data_UL16APVreMINI'] = merge([{'--era': 'Run2_2016_HIPM',
+                                         '--conditions': 'auto:run2_data'},
+                                          _NANO_data])
+steps['NANO_data_UL16reMINI'] = merge([{'--era': 'Run2_2016',
+                                      '--conditions': 'auto:run2_data'},
+                                       _NANO_data])
+steps['NANO_data_UL17reMINI'] = merge([{'--era': 'Run2_2017',
+                                      '--conditions': 'auto:run2_data'},
+                                       _NANO_data])
+steps['NANO_data_UL18reMINI'] = merge([{'--era': 'Run2_2018',
+                                      '--conditions': 'auto:run2_data'},
+                                       _NANO_data])
 
 ################################################################
 # 13.0 workflows
@@ -241,7 +269,7 @@ steps['ZMuSkim2024RAWRECO14.0'] = {'INPUT': InputInfo(location='STD', ls=lumis_R
 steps['ZeroBias2024RAW14.0'] = {'INPUT': InputInfo(location='STD', ls=lumis_Run2024D,
                                                    dataSet='/ZeroBias/Run2024D-v1/RAW')}
 
-steps['TestEnablesEcalHcal2024RAW14.0'] = {'INPUT': InputInfo(location='STD', ls={381946: [[1, 15]]},
+steps['TestEnablesEcalHcal2024RAW14.0'] = {'INPUT': InputInfo(location='STD', ls={382874: [[14, 25]]},
                                                               dataSet='/TestEnablesEcalHcal/Run2024F-Express-v1/RAW')}
 
 steps['NANO_data14.0'] = merge([{'--era': 'Run3_2024', '--conditions': 'auto:run3_data_prompt'},
@@ -303,7 +331,7 @@ steps['NANOGENFromMini'] = merge([{'-s': 'NANO:@GENFromMini,DQM:@nanogenDQM',
 ################################################################
 _wfn = WFN(2500)
 ######## 2500.0xx ########
-# Run2, 10_6_X input (current recommendation for 2016--2018)
+# Run2, 10_6_X MiniAOD input (current recommendation for 2016--2018)
 workflows[_wfn()] = ['NANOmc106Xul16v2', ['TTbarMINIAOD10.6_UL16v2', 'NANO_mc10.6ul16v2', 'HRV_NANO_mc']]
 workflows[_wfn()] = ['NANOmc106Xul17v2', ['TTbarMINIAOD10.6_UL17v2', 'NANO_mc10.6ul17v2', 'HRV_NANO_mc']]
 workflows[_wfn()] = ['NANOmc106Xul18v2', ['TTbarMINIAOD10.6_UL18v2', 'NANO_mc10.6ul18v2', 'HRV_NANO_mc']]
@@ -312,6 +340,19 @@ _wfn.subnext()
 workflows[_wfn()] = ['NANOdata106Xul16v2', ['MuonEG2016MINIAOD10.6v2', 'NANO_data10.6ul16v2', 'HRV_NANO_data']]
 workflows[_wfn()] = ['NANOdata106Xul17v2', ['MuonEG2017MINIAOD10.6v2', 'NANO_data10.6ul17v2', 'HRV_NANO_data']]
 workflows[_wfn()] = ['NANOdata106Xul18v2', ['MuonEG2018MINIAOD10.6v2', 'NANO_data10.6ul18v2', 'HRV_NANO_data']]
+
+# Run2, 10_6_X AOD, reMINI+reNANO
+_wfn.subnext()
+workflows[_wfn()] = ['NANOmcUL16APVreMINI', ['TTbar_13_reminiaod2016UL_preVFP_INPUT', 'REMINIAOD_mc2016UL_preVFP', 'NANO_mc_UL16APVreMINI', 'HRV_NANO_data']]  # noqa
+workflows[_wfn()] = ['NANOmcUL16reMINI', ['TTbar_13_reminiaod2016UL_postVFP_INPUT', 'REMINIAOD_mc2016UL_postVFP', 'NANO_mc_UL16reMINI', 'HRV_NANO_data']]  # noqa
+workflows[_wfn()] = ['NANOmcUL17reMINI', ['TTbar_13_reminiaod2017UL_INPUT', 'REMINIAOD_mc2017UL', 'NANO_mc_UL17reMINI', 'HRV_NANO_data']]  # noqa
+workflows[_wfn()] = ['NANOmcUL18reMINI', ['TTbar_13_reminiaod2018UL_INPUT', 'REMINIAOD_mc2018UL', 'NANO_mc_UL18reMINI', 'HRV_NANO_data']]  # noqa
+
+_wfn.subnext()
+workflows[_wfn()] = ['NANOdataUL16APVreMINI', ['RunJetHT2016E_reminiaodUL', 'REMINIAOD_data2016UL_HIPM', 'NANO_data_UL16APVreMINI', 'HRV_NANO_data']]  # noqa
+workflows[_wfn()] = ['NANOdataUL16reMINI', ['RunJetHT2016H_reminiaodUL', 'REMINIAOD_data2016UL', 'NANO_data_UL16reMINI', 'HRV_NANO_data']]  # noqa
+workflows[_wfn()] = ['NANOdataUL17reMINI', ['RunJetHT2017F_reminiaodUL', 'REMINIAOD_data2017UL', 'NANO_data_UL17reMINI', 'HRV_NANO_data']]  # noqa
+workflows[_wfn()] = ['NANOdataUL18reMINI', ['RunJetHT2018D_reminiaodUL', 'REMINIAOD_data2018UL', 'NANO_data_UL18reMINI', 'HRV_NANO_data']]  # noqa
 
 _wfn.next()
 ######## 2500.1xx ########
@@ -324,30 +365,30 @@ workflows[_wfn()] = ['NANOdata130Xrun3', ['MuonEG2023MINIAOD13.0', 'NANO_data13.
 
 # POG/PAG custom NANOs, MC
 _wfn.subnext()
-workflows[_wfn()] = ['muPOGNANOmc130X', ['TTbarMINIAOD13.0', 'muPOGNANO_mc13.0']]
-workflows[_wfn()] = ['EGMNANOmc130X', ['TTbarMINIAOD13.0', 'EGMNANO_mc13.0']]
-workflows[_wfn()] = ['BTVNANOmc130X', ['TTbarMINIAOD13.0', 'BTVNANO_mc13.0']]
-workflows[_wfn()] = ['jmeNANOmc130X', ['TTbarMINIAOD13.0', 'jmeNANO_mc13.0']]
-workflows[_wfn()] = ['jmeNANOrePuppimc130X', ['TTbarMINIAOD13.0', 'jmeNANO_rePuppi_mc13.0']]
-workflows[_wfn()] = ['lepTrackInfoNANOmc130X', ['TTbarMINIAOD13.0', 'lepTrackInfoNANO_mc13.0']]
+# workflows[_wfn()] = ['muPOGNANOmc130X', ['TTbarMINIAOD13.0', 'muPOGNANO_mc13.0']]
+# workflows[_wfn()] = ['EGMNANOmc130X', ['TTbarMINIAOD13.0', 'EGMNANO_mc13.0']]
+# workflows[_wfn()] = ['BTVNANOmc130X', ['TTbarMINIAOD13.0', 'BTVNANO_mc13.0']]
+# workflows[_wfn()] = ['jmeNANOmc130X', ['TTbarMINIAOD13.0', 'jmeNANO_mc13.0']]
+# workflows[_wfn()] = ['jmeNANOrePuppimc130X', ['TTbarMINIAOD13.0', 'jmeNANO_rePuppi_mc13.0']]
+# workflows[_wfn()] = ['lepTrackInfoNANOmc130X', ['TTbarMINIAOD13.0', 'lepTrackInfoNANO_mc13.0']]
 
 # POG/PAG custom NANOs, data
 _wfn.subnext()
-workflows[_wfn()] = ['muPOGNANO130Xrun3', ['MuonEG2023MINIAOD13.0', 'muPOGNANO_data13.0']]
-workflows[_wfn()] = ['EGMNANOdata130Xrun3', ['MuonEG2023MINIAOD13.0', 'EGMNANO_data13.0']]
-workflows[_wfn()] = ['BTVNANOdata130Xrun3', ['MuonEG2023MINIAOD13.0', 'BTVNANO_data13.0']]
-workflows[_wfn()] = ['jmeNANOdata130Xrun3', ['MuonEG2023MINIAOD13.0', 'jmeNANO_data13.0']]
-workflows[_wfn()] = ['jmeNANOrePuppidata130Xrun3', ['MuonEG2023MINIAOD13.0', 'jmeNANO_rePuppi_data13.0']]
-workflows[_wfn()] = ['lepTrackInfoNANOdata130Xrun3', ['MuonEG2023MINIAOD13.0', 'lepTrackInfoNANO_data13.0']]
+# workflows[_wfn()] = ['muPOGNANO130Xrun3', ['MuonEG2023MINIAOD13.0', 'muPOGNANO_data13.0']]
+# workflows[_wfn()] = ['EGMNANOdata130Xrun3', ['MuonEG2023MINIAOD13.0', 'EGMNANO_data13.0']]
+# workflows[_wfn()] = ['BTVNANOdata130Xrun3', ['MuonEG2023MINIAOD13.0', 'BTVNANO_data13.0']]
+# workflows[_wfn()] = ['jmeNANOdata130Xrun3', ['MuonEG2023MINIAOD13.0', 'jmeNANO_data13.0']]
+# workflows[_wfn()] = ['jmeNANOrePuppidata130Xrun3', ['MuonEG2023MINIAOD13.0', 'jmeNANO_rePuppi_data13.0']]
+# workflows[_wfn()] = ['lepTrackInfoNANOdata130Xrun3', ['MuonEG2023MINIAOD13.0', 'lepTrackInfoNANO_data13.0']]
 workflows[_wfn()] = ['ScoutingNANOdata130Xrun3', ['ScoutingPFRun32022RAW13.0', 'scoutingNANO_data13.0']]
 
 # DPG custom NANOs, data
 _wfn.subnext()
-workflows[_wfn()] = ['l1DPGNANO130Xrun3', ['ZMuSkim2023RAWRECO13.0', 'l1DPGNANO_data13.0']]
-workflows[_wfn()] = ['muDPGNANO130Xrun3', ['ZMuSkim2023RAWRECO13.0', 'muDPGNANO_data13.0']]
-workflows[_wfn()] = ['muDPGNANOBkg130Xrun3', ['ZeroBias2023RAW13.0', 'muDPGNANOBkg_data13.0']]
-workflows[_wfn()] = ['hcalDPGNANO130Xrun3', ['ZeroBias2023RAW13.0', 'hcalDPGNANO_data13.0']]
-workflows[_wfn()] = ['hcalDPGCalibNANO130Xrun3', ['TestEnablesEcalHcal2023RAW13.0', 'hcalDPGCalibNANO_data13.0']]
+# workflows[_wfn()] = ['l1DPGNANO130Xrun3', ['ZMuSkim2023RAWRECO13.0', 'l1DPGNANO_data13.0']]
+# workflows[_wfn()] = ['muDPGNANO130Xrun3', ['ZMuSkim2023RAWRECO13.0', 'muDPGNANO_data13.0']]
+# workflows[_wfn()] = ['muDPGNANOBkg130Xrun3', ['ZeroBias2023RAW13.0', 'muDPGNANOBkg_data13.0']]
+# workflows[_wfn()] = ['hcalDPGNANO130Xrun3', ['ZeroBias2023RAW13.0', 'hcalDPGNANO_data13.0']]
+# workflows[_wfn()] = ['hcalDPGCalibNANO130Xrun3', ['TestEnablesEcalHcal2023RAW13.0', 'hcalDPGCalibNANO_data13.0']]
 
 _wfn.next()
 ######## 2500.2xx ########
