@@ -204,8 +204,8 @@ def nanoAOD_customizeCommon(process):
     run2_nanoAOD_106Xv2.toModify(
         nanoAOD_addDeepInfoAK4_switch,
         nanoAOD_addParticleNetUL_switch=True,
-        nanoAOD_addParticleNet_switch=True,
-        nanoAOD_addRobustParTAK4Tag_switch=True,
+        nanoAOD_addParticleNet_switch=False,
+        nanoAOD_addRobustParTAK4Tag_switch=False,
     )
 
     # This function is defined in jetsAK4_Puppi_cff.py
@@ -237,10 +237,10 @@ def nanoAOD_customizeCommon(process):
     nanoAOD_tau_switch = cms.PSet(
         idsToAdd = cms.vstring(),
         runPNetAK4 = cms.bool(False),
-        addPNet = cms.bool(True)
+        addPNet = cms.bool(False)
     )
     (run2_nanoAOD_106Xv2 | run3_nanoAOD_122).toModify(
-        nanoAOD_tau_switch, idsToAdd = ["deepTau2018v2p5"]
+        nanoAOD_tau_switch, idsToAdd = []
     ).toModify(
         process, lambda p : nanoAOD_addTauIds(p, nanoAOD_tau_switch.idsToAdd.value())
     )
@@ -249,7 +249,7 @@ def nanoAOD_customizeCommon(process):
     # (it is rerun for run2 within jet tasks while is not needed for newer
     # run3 eras as it is present in miniAOD)
     (run2_nanoAOD_106Xv2 | run3_nanoAOD_122 | run3_nanoAOD_124).toModify(
-        nanoAOD_tau_switch, runPNetAK4 = True
+        nanoAOD_tau_switch, runPNetAK4 = False
     )
     nanoAOD_addPNetToTaus(process,
                           addPNetInfo = nanoAOD_tau_switch.addPNet.value(),

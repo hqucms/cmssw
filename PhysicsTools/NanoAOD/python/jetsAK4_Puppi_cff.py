@@ -155,8 +155,8 @@ def nanoAOD_addDeepInfoAK4(process,addParticleNetUL,addParticleNet,addRobustParT
     _btagDiscriminators=[]
     if addParticleNetUL:
         print("Updating process to run ParticleNetAK4 UL")
-        from RecoBTag.ONNXRuntime.pfParticleNetAK4_cff import _pfParticleNetAK4JetTagsProbs
-        _btagDiscriminators += _pfParticleNetAK4JetTagsProbs
+        from RecoBTag.ONNXRuntime.pfParticleNetAK4_cff import _pfParticleNetAK4JetTagsProbs, _pfNegativeParticleNetAK4JetTagsProbs
+        _btagDiscriminators += _pfParticleNetAK4JetTagsProbs + _pfNegativeParticleNetAK4JetTagsProbs
     if addParticleNet:
         print("Updating process to run ParticleNetAK4")
         from RecoBTag.ONNXRuntime.pfParticleNetFromMiniAODAK4_cff import _pfParticleNetFromMiniAODAK4PuppiCentralJetTagsAll as pfParticleNetFromMiniAODAK4PuppiCentralJetTagsAll

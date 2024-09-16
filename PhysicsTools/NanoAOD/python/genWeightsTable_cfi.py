@@ -23,7 +23,7 @@ genWeightsTable = cms.EDProducer("GenWeightsTableProducer",
     namedWeightLabels = cms.vstring(),
     lheWeightPrecision = cms.int32(14),
     maxPdfWeights = cms.uint32(150),
-    keepAllPSWeights = cms.bool(False),
+    keepAllPSWeights = cms.bool(True),
     debug = cms.untracked.bool(False),
 )
 

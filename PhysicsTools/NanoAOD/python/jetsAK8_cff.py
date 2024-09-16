@@ -256,7 +256,7 @@ nanoAOD_addDeepInfoAK8_switch = cms.PSet(
 # add PartlceNet legacy mass regression and new combined tagger + mass regression
 run2_nanoAOD_106Xv2.toModify(
     nanoAOD_addDeepInfoAK8_switch,
-    nanoAOD_addParticleNet_switch = True,
+    nanoAOD_addParticleNet_switch = False,
     nanoAOD_addParticleNetMassLegacy_switch = True
 )
 
