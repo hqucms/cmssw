@@ -18,7 +18,7 @@ from RecoTauTag.RecoTau.tauIdWPsDefs import WORKING_POINTS_v2p5
 
 finalTaus = cms.EDFilter("PATTauRefSelector",
     src = cms.InputTag("slimmedTaus"),
-    cut = cms.string("pt > 18 && ((tauID('decayModeFindingNewDMs') > 0.5 && (tauID('byLooseCombinedIsolationDeltaBetaCorr3Hits') || (tauID('chargedIsoPtSumdR03')+max(0.,tauID('neutralIsoPtSumdR03')-0.072*tauID('puCorrPtSum'))<2.5) || tauID('byVVVLooseDeepTau2017v2p1VSjet') || tauID('byVVVLooseDeepTau2018v2p5VSjet'))) || (?isTauIDAvailable('byPNetVSjetraw')?tauID('byPNetVSjetraw'):-1) > {})".format(0.05))
+    cut = cms.string("pt > 999999 && ((tauID('decayModeFindingNewDMs') > 0.5 && (tauID('byLooseCombinedIsolationDeltaBetaCorr3Hits') || (tauID('chargedIsoPtSumdR03')+max(0.,tauID('neutralIsoPtSumdR03')-0.072*tauID('puCorrPtSum'))<2.5) || tauID('byVVVLooseDeepTau2017v2p1VSjet') || tauID('byVVVLooseDeepTau2018v2p5VSjet'))) || (?isTauIDAvailable('byPNetVSjetraw')?tauID('byPNetVSjetraw'):-1) > {})".format(0.05))
 )
 
 run3_nanoAOD_124.toModify(
@@ -130,8 +130,8 @@ _pnet2023 = cms.PSet(
 _variablesMiniV2 = cms.PSet(
     _tauVarsBase,
     _deepTauVars2017v2p1,
-    _deepTauVars2018v2p5,
-    _pnet2023
+    # _deepTauVars2018v2p5,
+    # _pnet2023
 )
 
 tauTable.variables = _variablesMiniV2

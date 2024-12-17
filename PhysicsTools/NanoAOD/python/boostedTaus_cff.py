@@ -15,7 +15,7 @@ finalBoostedTaus = cms.EDFilter("PATTauRefSelector",
 )
 run2_nanoAOD_106Xv2.toModify(
     finalBoostedTaus,
-    cut = "pt > 40 && tauID('decayModeFindingNewDMs') && (tauID('byVVLooseIsolationMVArun2017v2DBoldDMwLT2017') || tauID('byVVLooseIsolationMVArun2017v2DBoldDMdR0p3wLT2017') || tauID('byVVLooseIsolationMVArun2017v2DBnewDMwLT2017'))"
+    cut = "pt > 999999 && tauID('decayModeFindingNewDMs') && (tauID('byVVLooseIsolationMVArun2017v2DBoldDMwLT2017') || tauID('byVVLooseIsolationMVArun2017v2DBoldDMdR0p3wLT2017') || tauID('byVVLooseIsolationMVArun2017v2DBnewDMwLT2017'))"
 )
 
 boostedTauTable = simpleCandidateFlatTableProducer.clone(
