@@ -242,6 +242,14 @@ run2_nanoAOD_106Xv2.toModify(
     nanoAOD_addGlobalParT_switch = True,
 )
 
+run3_nanoAOD_pre142X.toModify(
+    nanoAOD_addDeepInfoAK8_switch,
+    nanoAOD_addGlobalParT_switch = True,
+).toModify(
+    fatJetTable.variables,
+    particleNet_WVsQCD = Var("(bDiscriminator('pfParticleNetFromMiniAODAK8JetTags:probHqq')+bDiscriminator('pfParticleNetFromMiniAODAK8JetTags:probHcc'))/(bDiscriminator('pfParticleNetFromMiniAODAK8JetTags:probHqq')+bDiscriminator('pfParticleNetFromMiniAODAK8JetTags:probHcc')+bDiscriminator('pfParticleNetFromMiniAODAK8JetTags:probQCD2hf')+bDiscriminator('pfParticleNetFromMiniAODAK8JetTags:probQCD1hf')+bDiscriminator('pfParticleNetFromMiniAODAK8JetTags:probQCD0hf'))",float,doc="ParticleNet W->qq vs. QCD score: Xqq+Xcc/(Xqq+Xcc+QCD)",precision=10),
+)
+
 ################################################
 ## DeepInfoAK8:End
 #################################################

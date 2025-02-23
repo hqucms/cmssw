@@ -124,11 +124,22 @@ run2_nanoAOD_ANY.toModify(
     btagDeepCvB = Var("?bDiscriminator('pfDeepCSVJetTags:probc')>=0?bDiscriminator('pfDeepCSVJetTags:probc')/(bDiscriminator('pfDeepCSVJetTags:probc')+bDiscriminator('pfDeepCSVJetTags:probb')+bDiscriminator('pfDeepCSVJetTags:probbb')):-1",float,doc="DeepCSV c vs b+bb discriminator",precision=10)
 )
 
-run3_nanoAOD_pre142X.toModify(
-    jetPuppiTable.variables,
-    puIdDisc = None,
+# PileUp ID
+from RecoJets.JetProducers.PileupJetID_cfi import pileupJetIdPuppi
+pileupJetIdPuppiNano = pileupJetIdPuppi.clone(
+    jets = "updatedJetsPuppi",
+    srcConstituentWeights = "packedpuppi",
+    inputIsCorrected=True, applyJec=False, vertexes="offlineSlimmedPrimaryVertices",
 )
-
+run3_nanoAOD_pre142X.toReplaceWith(
+    updatedJetsPuppiWithUserData.userFloats,
+    updatedJetsPuppiWithUserData.userFloats.clone(
+        puIdNanoDisc = cms.InputTag('pileupJetIdPuppiNano:fullDiscriminant'),
+    )
+).toModify(
+    jetPuppiTable.variables,
+    puIdDisc=Var("userFloat('puIdNanoDisc')", float, doc="Pileup ID BDT discriminant with 133X Winter24 PuppiV18 training", precision=10),
+)
 
 #jets are not as precise as muons
 jetPuppiTable.variables.pt.precision=10
@@ -176,6 +187,12 @@ nanoAOD_addDeepInfoAK4_switch = cms.PSet(
     nanoAOD_addParticleNet_switch = cms.untracked.bool(False),
     nanoAOD_addRobustParTAK4Tag_switch = cms.untracked.bool(False),
     nanoAOD_addUnifiedParTAK4Tag_switch = cms.untracked.bool(False)
+)
+
+run3_nanoAOD_pre142X.toModify(
+    nanoAOD_addDeepInfoAK4_switch,
+    nanoAOD_addParticleNet_switch = True,
+    nanoAOD_addUnifiedParTAK4Tag_switch = True,
 )
 
 ################################################
@@ -229,6 +246,10 @@ jetPuppiForMETTask =  cms.Task(basicJetsPuppiForMetForT1METNano,corrT1METJetPupp
 
 #before cross linking
 jetPuppiUserDataTask = cms.Task(hfJetPuppiShowerShapeforNanoAOD)
+run3_nanoAOD_pre142X.toReplaceWith(
+    jetPuppiUserDataTask,
+    jetPuppiUserDataTask.copyAndAdd(pileupJetIdPuppiNano)
+)
 
 #before cross linking
 jetPuppiTask = cms.Task(jetPuppiCorrFactorsNano,updatedJetsPuppi,jetPuppiUserDataTask,updatedJetsPuppiWithUserData,finalJetsPuppi)
