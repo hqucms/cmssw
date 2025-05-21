@@ -65,7 +65,11 @@ def update_jets_AK4(process):
     process.updatedPatJetsTransientCorrectedPuppiWithDeepInfo.tagInfoSources.append(cms.InputTag("pfUnifiedParticleTransformerAK4TagInfosPuppiWithDeepInfo"))
     process.updatedPatJetsTransientCorrectedPuppiWithDeepInfo.addTagInfos = cms.bool(True)
 
-    
+    # fix circular module dependency in ParticleNetFromMiniAOD TagInfos
+    if hasattr(process, 'slimmedTaus'):
+        for mod in process.producers.keys():
+            if 'ParticleNetFromMiniAOD' in mod and 'TagInfos' in mod:
+                getattr(process, mod).taus = 'slimmedTaus::@skipCurrentProcess'
     
     return process
 
